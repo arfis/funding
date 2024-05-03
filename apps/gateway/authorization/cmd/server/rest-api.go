@@ -1,8 +1,8 @@
 package server
 
 import (
-	"crowd-funding/authorization/internal/authorization"
 	"fmt"
+	"github.com/arfis/crowd-funding/authorization/internal/authorization"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"

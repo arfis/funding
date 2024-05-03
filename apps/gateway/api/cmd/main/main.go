@@ -1,13 +1,6 @@
 package main
 
-import (
-	"crowd-funding/api/cmd/server"
-)
-
-func Hello(name string) string {
-	result := "Hello " + name
-	return result
-}
+import "github.com/arfis/crowd-funding/gateway/cmd/server"
 
 func main() {
 

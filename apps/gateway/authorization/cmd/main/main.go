@@ -1,8 +1,8 @@
 package main
 
 import (
-	"crowd-funding/authorization/cmd/server"
 	"fmt"
+	"github.com/arfis/crowd-funding/authorization/cmd/server"
 )
 
 func Hello(name string) string {

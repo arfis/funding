@@ -43,6 +43,9 @@ services:
     build:
       context: ./apps/gateway/api
       dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - ./apps/gateway/api:/app
     healthcheck:

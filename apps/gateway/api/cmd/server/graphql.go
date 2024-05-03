@@ -1,8 +1,8 @@
 package server
 
 import (
-	graphqlImpl "crowd-funding/api/config/graphql"
 	"fmt"
+	graphqlImpl "github.com/arfis/crowd-funding/gateway/config/graphql"
 	"github.com/gorilla/handlers"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"

@@ -1,12 +1,9 @@
 package graphqlImpl
 
 import (
-	"crowd-funding/api/internal/service"
 	"github.com/google/uuid"
 	"github.com/graphql-go/graphql"
 )
-
-var projectService = service.ProjectService{}
 
 var GetRootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Query",

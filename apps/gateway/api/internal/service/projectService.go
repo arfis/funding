@@ -1,7 +1,7 @@
 package service
 
 import (
-	database "crowd-funding/api/internal/db"
+	database "github.com/arfis/crowd-funding/gateway/internal/db"
 	"github.com/google/uuid"
 )
 

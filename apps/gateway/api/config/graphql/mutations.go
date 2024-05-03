@@ -1,16 +1,16 @@
 package graphqlImpl
 
 import (
-	database "crowd-funding/api/internal/db"
-	"crowd-funding/api/internal/service"
 	"fmt"
+	database "github.com/arfis/crowd-funding/gateway/internal/db"
+	"github.com/arfis/crowd-funding/gateway/internal/service"
 	"github.com/google/uuid"
 	"github.com/graphql-go/graphql"
 	"net/http"
 	"time"
 )
 
-var invoiceService service.ProjectService
+var projectService service.ProjectService
 
 var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
