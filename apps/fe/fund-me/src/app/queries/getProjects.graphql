@@ -1,0 +1,8 @@
+query GetAllProjects {
+         getAllProjects {
+             id
+             name
+             description
+             allocation
+         }
+     }

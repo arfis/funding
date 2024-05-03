@@ -1,0 +1,8 @@
+query GetProject($id: ID!) {
+    getProject(id: $id) {
+        id
+        name
+        description
+        # Add other fields as necessary
+    }
+}
