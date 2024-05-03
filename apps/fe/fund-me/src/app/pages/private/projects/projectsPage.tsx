@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {Project} from './components/project';
 import {useGetAllProjectsQuery} from '../../../../generated/graphql';
 import {UserContext} from '../dashboard/dashboard-page';
+import ProjectForm from './components/createProjectForm';
 
 const ProjectsContainer = styled.div`
     display: flex;
@@ -28,6 +29,7 @@ const ProjectsPage = () => {
     return (
         <>
             <h1>Projects</h1>
+            <ProjectForm></ProjectForm>
             <ProjectsContainer>
                 {
                     data && !!data.getAllProjects && data.getAllProjects!.map(project =>

@@ -2,6 +2,7 @@ query GetAllProjects {
          getAllProjects {
              id
              name
+             freeAllocation
              description
              allocation
          }

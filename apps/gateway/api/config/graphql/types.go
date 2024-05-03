@@ -3,9 +3,11 @@ package graphqlImpl
 import (
 	"fmt"
 	database "github.com/arfis/crowd-funding/gateway/internal/db"
+	"github.com/arfis/crowd-funding/gateway/internal/service"
 	"github.com/graphql-go/graphql"
 )
 
+var allocationService service.AllocationService
 var projectType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Project",
 	Fields: graphql.Fields{
@@ -34,10 +36,10 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.NewNonNull(graphql.Boolean),
 		},
 		"startDate": &graphql.Field{
-			Type: graphql.String, // GraphQL does not have a date type by default
+			Type: graphql.String, // # ISO 8601 date-time string
 		},
 		"endDate": &graphql.Field{
-			Type: graphql.String, // Use String to represent dates
+			Type: graphql.String, // # ISO 8601 date-time string
 		},
 		"investments": &graphql.Field{
 			Type: graphql.NewList(investmentType),
@@ -45,13 +47,24 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 				fmt.Printf("Debug: params.Source is of type %T\n", params.Source)
 				// Assume project is loaded and available as part of params.Source
 				project, ok := params.Source.(*database.Project)
-				fmt.Printf("is OK %v\n", ok)
 				if !ok {
 					return nil, fmt.Errorf("invalid source for project investments")
 				}
-				fmt.Println("CONTINUE")
 				// Use the project ID to fetch related investments
-				return investmentService.GetInvestmentsByProjectID(project.ID)
+				return allocationService.GetInvestmentsByProjectID(project.ID)
+			},
+		},
+		"freeAllocation": &graphql.Field{
+			Type: graphql.Int,
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				fmt.Printf("Debug: params.Source is of type %T\n", params.Source)
+				// Assume project is loaded and available as part of params.Source
+				project, ok := params.Source.(*database.Project)
+				if !ok {
+					return nil, fmt.Errorf("invalid source for project investments")
+				}
+				// Use the project ID to fetch related investments
+				return allocationService.GetFreeAllocation(project.ID)
 			},
 		},
 	},

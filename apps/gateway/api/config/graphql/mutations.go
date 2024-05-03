@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	investmentService service.InvestmentService
-	projectService    service.ProjectService
+	projectService service.ProjectService
 )
 
 var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
@@ -42,6 +41,9 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				"endDate": &graphql.ArgumentConfig{
 					Type: graphql.String,
 				},
+				"approved": &graphql.ArgumentConfig{
+					Type: graphql.Boolean,
+				},
 				// Add other fields similarly
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -49,15 +51,13 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				headers, headersOk := params.Context.Value("headers").(http.Header)
 
 				fmt.Printf("\n The headers are %v %v", headers, headersOk)
+				// When parsing a string to time.Time
 				startDate, err := time.Parse(time.RFC3339, params.Args["startDate"].(string))
-				if err != nil {
-					return nil, err // Return or handle error appropriately if parsing fails
-				}
+				endDate, err := time.Parse(time.RFC3339, params.Args["startDate"].(string))
 
-				endDate, err := time.Parse(time.RFC3339, params.Args["endDate"].(string))
-				if err != nil {
-					return nil, err // Return or handle error appropriately if parsing fails
-				}
+				//// When sending time.Time to the client
+				//startDateString := startDate.Format(time.RFC3339)
+				//endDateString := endDate.Format(time.RFC3339)
 
 				var (
 					ownerId  uuid.UUID
@@ -186,7 +186,14 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Amount:    amount,
 				}
 
-				return investmentService.CreateInvestment(&investment)
+				investmentService := service.NewInvestmentService(database.GetConnection())
+				createdInvestment, err := investmentService.CreateInvestment(&investment)
+
+				if err != nil {
+					return nil, fmt.Errorf(err.Error())
+				}
+
+				return createdInvestment, nil
 			},
 		},
 	},

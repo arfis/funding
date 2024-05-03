@@ -3,6 +3,7 @@ query GetProject($id: ID!) {
         id
         name
         description
+        freeAllocation
         investments {
             amount
         }

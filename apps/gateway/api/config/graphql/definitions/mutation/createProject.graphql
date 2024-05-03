@@ -1,0 +1,32 @@
+mutation CreateProject(
+    $name: String!,
+    $description: String!,
+    $type: String!,
+    $imageUrl: String,
+    $allocation: Int,
+    $startDate: String,
+    $endDate: String,
+    $approved: Boolean
+) {
+    createProject(
+        name: $name,
+        description: $description,
+        type: $type,
+        imageUrl: $imageUrl,
+        allocation: $allocation,
+        startDate: $startDate,
+        endDate: $endDate,
+        approved: $approved
+    ) {
+        id
+        name
+        type
+        imageUrl
+        description
+        allocation
+        startDate
+        endDate
+        ownerId
+        approved
+    }
+}

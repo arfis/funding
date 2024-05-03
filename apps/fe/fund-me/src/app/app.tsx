@@ -50,7 +50,7 @@ export function App() {
     }, []);
 
     const setUserDetails = useCallback((decodedToken: any) => {
-        dispatch(setUser({name: decodedToken.name, email: decodedToken.id}));
+        dispatch(setUser({name: decodedToken.name, email: decodedToken.email, id: decodedToken.userId}));
     }, []);
 
     return user ? (

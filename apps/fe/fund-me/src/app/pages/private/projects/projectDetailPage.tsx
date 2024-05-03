@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {useParams} from 'react-router-dom';
 import {useGetProjectQuery} from '../../../../generated/graphql';
 import {UserContext} from '../dashboard/dashboard-page';
+import InvestmentForm from './components/investmentForm';
 
 const ProjectsContainer = styled.div`
     display: flex;
@@ -33,6 +34,10 @@ const ProjectDetailPage = () => {
             <ProjectsContainer>
                 <h2>{project.name}</h2>
                 <p>{project.description}</p>
+
+                <p>Free allocation is {project.freeAllocation}</p>
+                {project && project?.investments?.map(investment => <p>Invested {investment?.amount}</p>)}
+                <InvestmentForm projectId={project.id}></InvestmentForm>
             </ProjectsContainer>
     );
 };
