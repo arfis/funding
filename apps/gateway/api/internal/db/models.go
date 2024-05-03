@@ -8,23 +8,23 @@ import (
 
 type Project struct {
 	ID          uuid.UUID     `json:"id" gorm:"type:uuid;primary_key;"`
-	Name        string        `json:"name" gorm:"not null;type:varchar(100)"`        // Explicit type and constraint
-	Type        string        `json:"type" gorm:"not null;type:varchar(100)"`        // Explicit type and constraint
-	ImageUrl    string        `json:"imageUrl" gorm:"type:text"`                     // Handles URLs which can be long
-	Description string        `json:"description" gorm:"type:text"`                  // Handles potentially long descriptions
-	Allocation  float64       `json:"allocation" gorm:"not null;type:decimal(10,2)"` // Explicit type for financial data
-	OwnerId     *uuid.UUID    `json:"ownerId" gorm:"type:uuid;not null;index"`       // Indexed for faster lookups on owner
-	Approved    bool          `json:"approved" gorm:"type:boolean;default:false"`    // Default value
-	StartDate   time.Time     `json:"startDate" gorm:"type:date"`                    // Date without time
-	EndDate     time.Time     `json:"endDate" gorm:"type:date"`                      // Date without time
-	Investments *[]Investment `json:"investments" gorm:"foreignKey:ProjectID"`       // Relationship definition
+	Name        string        `json:"name" gorm:"not null;type:varchar(100)"`     // Explicit type and constraint
+	Type        string        `json:"type" gorm:"not null;type:varchar(100)"`     // Explicit type and constraint
+	ImageUrl    string        `json:"imageUrl" gorm:"type:text"`                  // Handles URLs which can be long
+	Description string        `json:"description" gorm:"type:text"`               // Handles potentially long descriptions
+	Allocation  int           `json:"allocation" gorm:"not null;type:int"`        // Explicit type for financial data
+	OwnerId     *uuid.UUID    `json:"ownerId" gorm:"type:uuid;not null;index"`    // Indexed for faster lookups on owner
+	Approved    bool          `json:"approved" gorm:"type:boolean;default:false"` // Default value
+	StartDate   time.Time     `json:"startDate" gorm:"type:date"`                 // Date without time
+	EndDate     time.Time     `json:"endDate" gorm:"type:date"`                   // Date without time
+	Investments *[]Investment `json:"investments" gorm:"foreignKey:ProjectID"`    // Relationship definition
 }
 
 type Investment struct {
 	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
 	ProjectID uuid.UUID `json:"projectId" gorm:"type:uuid;not null;index"` // Indexed for performance
 	UserID    uuid.UUID `json:"userId" gorm:"type:uuid;not null;index"`    // Indexed for performance
-	Amount    float64   `json:"amount" gorm:"not null;type:decimal(10,2)"` // Precision for financial data
+	Amount    int       `json:"amount" gorm:"not null;type:int"`           // Precision for financial data
 	Project   Project   `json:"project" gorm:"foreignKey:ProjectID"`       // Navigation property
 }
 

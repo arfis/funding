@@ -1,6 +1,8 @@
 package graphqlImpl
 
 import (
+	"fmt"
+	database "github.com/arfis/crowd-funding/gateway/internal/db"
 	"github.com/graphql-go/graphql"
 )
 
@@ -23,7 +25,7 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.NewNonNull(graphql.String),
 		},
 		"allocation": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.Float),
+			Type: graphql.NewNonNull(graphql.Int),
 		},
 		"ownerId": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.ID),
@@ -39,6 +41,18 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 		},
 		"investments": &graphql.Field{
 			Type: graphql.NewList(investmentType),
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				fmt.Printf("Debug: params.Source is of type %T\n", params.Source)
+				// Assume project is loaded and available as part of params.Source
+				project, ok := params.Source.(*database.Project)
+				fmt.Printf("is OK %v\n", ok)
+				if !ok {
+					return nil, fmt.Errorf("invalid source for project investments")
+				}
+				fmt.Println("CONTINUE")
+				// Use the project ID to fetch related investments
+				return investmentService.GetInvestmentsByProjectID(project.ID)
+			},
 		},
 	},
 })
@@ -56,7 +70,7 @@ var investmentType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.NewNonNull(graphql.ID),
 		},
 		"amount": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.Float),
+			Type: graphql.NewNonNull(graphql.Int),
 		},
 	},
 })

@@ -32,7 +32,7 @@ export function App() {
     const prevToken = useRef("");
 
     useEffect(() => {
-        const token = getCookie('AuthToken');
+        const token = getCookie('Token');
         console.log('GOT TOKEN ', token);
         if (token && token !== prevToken.current) {
             setToken(token);

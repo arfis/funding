@@ -1,8 +1,6 @@
 import React, {useContext} from 'react';
 import styled from 'styled-components';
-import {useSelector} from 'react-redux'
 import {useParams} from 'react-router-dom';
-import {RootState} from '../../../store/store';
 import {useGetProjectQuery} from '../../../../generated/graphql';
 import {UserContext} from '../dashboard/dashboard-page';
 

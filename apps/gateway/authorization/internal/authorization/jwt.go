@@ -1,7 +1,7 @@
 package authorization
 
 import (
-	"golang.org/x/oauth2/jwt"
+	"github.com/dgrijalva/jwt-go"
 	"time"
 )
 

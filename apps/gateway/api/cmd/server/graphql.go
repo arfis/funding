@@ -35,7 +35,7 @@ func (ra *GraphQLServer) StartWebServer(port uint, terminateChan chan int) error
 	http.Handle("/graphql", handlers.CORS(corsOptions, corsHeaders, corsMethods)(h))
 	http.HandleFunc("/sandbox", sandboxHandler)
 
-	log.Println("Starting GraphQL server on http://localhost:", port)
+	log.Println("Here!!Starting GraphQL server on http://localhost:", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 
 	terminateChan <- 1

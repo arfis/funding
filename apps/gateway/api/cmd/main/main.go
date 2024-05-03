@@ -1,6 +1,8 @@
 package main
 
-import "github.com/arfis/crowd-funding/gateway/cmd/server"
+import (
+	"github.com/arfis/crowd-funding/gateway/cmd/server"
+)
 
 func main() {
 
@@ -8,6 +10,6 @@ func main() {
 	var graphQlServer = server.GraphQLServer{}
 
 	go graphQlServer.StartWebServer(8081, terminationChanel)
-
+	//database.Migrate()
 	<-terminationChanel
 }

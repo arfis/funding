@@ -3,6 +3,9 @@ query GetProject($id: ID!) {
         id
         name
         description
+        investments {
+            amount
+        }
         # Add other fields as necessary
     }
 }

@@ -1,10 +1,6 @@
 import React, {useContext} from 'react';
 import styled from 'styled-components';
-import {useDispatch, useSelector} from 'react-redux'
-import {clearUser} from '../../../store/features/user-slice';
-import {RootState} from '../../../store/store';
 import {Project} from './components/project';
-import {useQuery} from '@apollo/client';
 import {useGetAllProjectsQuery} from '../../../../generated/graphql';
 import {UserContext} from '../dashboard/dashboard-page';
 

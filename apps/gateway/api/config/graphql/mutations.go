@@ -10,7 +10,10 @@ import (
 	"time"
 )
 
-var projectService service.ProjectService
+var (
+	investmentService service.InvestmentService
+	projectService    service.ProjectService
+)
 
 var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
@@ -31,7 +34,7 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.String,
 				},
 				"allocation": &graphql.ArgumentConfig{
-					Type: graphql.Float,
+					Type: graphql.Int,
 				},
 				"startDate": &graphql.ArgumentConfig{
 					Type: graphql.String,
@@ -90,7 +93,7 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type:        params.Args["type"].(string),
 					ImageUrl:    params.Args["imageUrl"].(string),
 					Description: params.Args["description"].(string),
-					Allocation:  params.Args["allocation"].(float64),
+					Allocation:  params.Args["allocation"].(int),
 					OwnerId:     &ownerId,
 					Approved:    approved,
 					StartDate:   startDate,
@@ -99,6 +102,7 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				createdProject, err := projectService.CreateProject(&project)
 				if err != nil {
 					return nil, err
+
 				}
 				return createdProject, nil
 			},
@@ -111,7 +115,7 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				"type":        &graphql.ArgumentConfig{Type: graphql.String},
 				"imageUrl":    &graphql.ArgumentConfig{Type: graphql.String},
 				"description": &graphql.ArgumentConfig{Type: graphql.String},
-				"allocation":  &graphql.ArgumentConfig{Type: graphql.Float},
+				"allocation":  &graphql.ArgumentConfig{Type: graphql.Int},
 				"ownerId":     &graphql.ArgumentConfig{Type: graphql.ID},
 				"approved":    &graphql.ArgumentConfig{Type: graphql.Boolean},
 				"startDate":   &graphql.ArgumentConfig{Type: graphql.String},
@@ -126,8 +130,8 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 					project.Name = name
 				}
 
-				if name, ok := params.Args["name"].(string); ok {
-					project.Name = name
+				if approved, ok := params.Args["approved"].(bool); ok {
+					project.Approved = approved
 				}
 				// Repeat for other fields...
 
@@ -145,6 +149,44 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				id := params.Args["id"].(uuid.UUID)
 				// Assume GetProjectByID fetches a project by its UUID
 				return projectService.DeleteProject(id)
+			},
+		},
+		"createInvestment": &graphql.Field{
+			Type: investmentType, // Assuming you have defined this type similar to projectType
+			Args: graphql.FieldConfigArgument{
+				"projectId": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.ID),
+				},
+				"userId": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.ID),
+				},
+				"amount": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.Int),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				projectId, _ := uuid.Parse(params.Args["projectId"].(string))
+				userId, _ := uuid.Parse(params.Args["userId"].(string))
+				amount := params.Args["amount"].(int)
+
+				// Validate project exists and can receive investments
+				project, err := projectService.GetProjectByID(projectId)
+				if err != nil {
+					return nil, fmt.Errorf("project not found")
+				}
+				if !project.Approved {
+					return nil, fmt.Errorf("project not approved for investments")
+				}
+
+				// Create and save the new investment
+				investment := database.Investment{
+					ID:        uuid.New(),
+					ProjectID: projectId,
+					UserID:    userId,
+					Amount:    amount,
+				}
+
+				return investmentService.CreateInvestment(&investment)
 			},
 		},
 	},
