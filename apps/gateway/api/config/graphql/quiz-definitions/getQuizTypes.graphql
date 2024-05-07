@@ -1,0 +1,5 @@
+query GetQuizTypes {
+    getAllQuizes {
+        type
+    }
+}

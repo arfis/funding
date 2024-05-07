@@ -1,5 +1,5 @@
-mutation CreateInvestment($projectId: ID!, $userId: ID!, $amount: Int!) {
-    createInvestment(projectId: $projectId, userId: $userId, amount: $amount) {
+mutation CreateInvestment($projectId: ID!, $amount: Int!) {
+    createInvestment(projectId: $projectId, amount: $amount) {
         id
         amount
     }

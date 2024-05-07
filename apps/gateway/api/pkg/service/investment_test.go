@@ -1,7 +1,7 @@
 package service
 
 import (
-	database "github.com/arfis/crowd-funding/gateway/internal/db"
+	database "github.com/arfis/crowd-funding/gateway/internal/dbModels"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"

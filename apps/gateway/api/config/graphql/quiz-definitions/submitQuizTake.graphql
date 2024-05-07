@@ -1,0 +1,6 @@
+mutation SubmitQuizAnswer($input: SubmitQuizInput!) {
+    submitQuizAnswer(input: $input) {
+        success
+        pointsScored
+    }
+}

@@ -24,7 +24,7 @@ const ProjectDetailPage = () => {
     if (!project) return <p>No project found!</p>;
 
     const investIntoProject = (projectId: string) => {
-        console.log('USER ' + user?.name + ' IS INVESTING INTO ' + projectId);
+        console.log('USER ' + user?.userName + ' IS INVESTING INTO ' + projectId);
     }
 
     if (loading) return <p>Loading...</p>;

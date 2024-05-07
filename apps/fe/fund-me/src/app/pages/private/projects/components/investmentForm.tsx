@@ -17,11 +17,9 @@ function InvestmentForm({ projectId }: {projectId: string}) {
             const { data } = await createInvestment({
                 variables: {
                     projectId,
-                    userId: user.id,
                     amount: parseFloat(amount),
                 },
             });
-            console.log('Investment created:', data?.createInvestment);
         } catch (err) {
             console.error("Error creating investment:", err);
         }

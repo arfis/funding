@@ -11,7 +11,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from './store/store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useCallback, useRef } from 'react';
-import { setUser } from './store/features/user-slice';
+import {clearUser, setUser, User} from './store/features/user-slice';
 import { getCookie } from './util/cookie.util';
 import HookTest from './pages/public/hook-test/hookTest';
 
@@ -32,25 +32,27 @@ export function App() {
     const prevToken = useRef("");
 
     useEffect(() => {
-        const token = getCookie('Token');
-        console.log('GOT TOKEN ', token);
+        const token = getCookie('AuthToken');
         if (token && token !== prevToken.current) {
             setToken(token);
             prevToken.current = token; // Update the ref after handling token
+        } else if (!token) {
+            dispatch(clearUser())
         }
     }, []);
 
     const setToken = useCallback((token: string) => {
         try {
-            const decoded = jwtDecode(token);
+            const decoded = jwtDecode<User>(token);
+            console.log(decoded)
             setUserDetails(decoded);
         } catch (e) {
             console.error('Invalid token', e);
         }
     }, []);
 
-    const setUserDetails = useCallback((decodedToken: any) => {
-        dispatch(setUser({name: decodedToken.name, email: decodedToken.email, id: decodedToken.userId}));
+    const setUserDetails = useCallback((decodedToken: User) => {
+        dispatch(setUser(decodedToken));
     }, []);
 
     return user ? (
@@ -59,21 +61,21 @@ export function App() {
         </StyledApp>
     ) : (
         <Content>
-            <ul>
-                <li>
-                    <Link to="/register">Profile</Link>
-                </li>
-                <li>
-                    <Link to="/login">Projects</Link>
-                </li>
-                <li>
-                    <Link to="/hook-test">Hook test</Link>
-                </li>
-            </ul>
+            {/*<ul>*/}
+            {/*    <li>*/}
+            {/*        <Link to="/register">Register</Link>*/}
+            {/*    </li>*/}
+            {/*    <li>*/}
+            {/*        <Link to="/login">Login</Link>*/}
+            {/*    </li>*/}
+            {/*    <li>*/}
+            {/*        <Link to="/hook-test">Hook test</Link>*/}
+            {/*    </li>*/}
+            {/*</ul>*/}
             <Routes>
                 <Route path="/register" element={<RegisterPage/>}/>
                 <Route path="/login" element={<LoginPage/>}/>
-                <Route path="/" element={<HookTest/>}/>
+                <Route path="/" element={<LoginPage/>}/>
                 <Route path="/hook-test" element={<Navigate to="/"/>}/>
             </Routes>
         </Content>

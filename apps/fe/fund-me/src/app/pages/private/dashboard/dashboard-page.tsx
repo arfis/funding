@@ -1,23 +1,16 @@
-import React, {createContext, useContext, useEffect} from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import styled from 'styled-components';
-import {useSelector, useDispatch} from 'react-redux'
-import {clearUser, User} from '../../../store/features/user-slice';
-import {RootState} from '../../../store/store';
-import {Route, Routes, Link, Navigate} from 'react-router-dom';
-import ProjectsPage from '../projects/projectsPage'
-import ProfilePage from '../profile/profile-page'
+import { useSelector, useDispatch } from 'react-redux';
+import { clearUser, User } from '../../../store/features/user-slice';
+import { RootState } from '../../../store/store';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import ProjectsPage from '../projects/projectsPage';
+import ProfilePage from '../profile/profile-page';
 import ProjectDetailPage from '../projects/projectDetailPage';
-
-const Navigation = styled.div`
-    display: flex;
-    column-gap: 10px;
-    align-items: center;
-    justify-content: center;
-    background-color: #f7f7f7;
-    padding: 20px;
-    box-sizing: border-box;
-    width: 100%;
-`
+import { QuizPage } from '../quiz/quizPage';
+import QuizTakePage from '../quiz/quiz-take/quizTakePage';
+import { HEADER_HEIGHT } from '../../../constants';
+import NavigationHeader from './components/navigationHeader';
 
 const LoggedInContainer = styled.div`
     display: flex;
@@ -33,33 +26,41 @@ const Content = styled.div`
     width: 100%;
 `;
 
-
 export const UserContext = createContext({} as User);
 
 const DashboardPage = () => {
     const user = useSelector((state: RootState) => state.loggedInUser.user);
-
     const dispatch = useDispatch();
 
     const handleLogout = () => {
+        console.log('HANDLE LOGOUT')
         dispatch(clearUser());
     };
+
+    const links = [
+        { to: '/projects', label: 'Projects' },
+        { to: '/quizTake', label: 'QuizTake' },
+        { to: '/quizes', label: 'Quizes' },
+    ];
 
     if (user) {
         return (
             <UserContext.Provider value={user}>
                 <LoggedInContainer>
-                    <Navigation role="navigation">
-                        <Link to="/projects">Projects</Link>
-                        <Link to="/profile">{user?.name}</Link>
-                        <Link to="/login"><span onClick={handleLogout}>Logout</span></Link>
-                    </Navigation>
+                    <NavigationHeader
+                        links={links}
+                        onLogout={handleLogout}
+                        userName={user.userName}
+                        avatarUrl={user.avatarUrl}
+                    />
                     <Content>
                         <Routes>
-                            <Route path="/projects/:id" element={<ProjectDetailPage/>}/>
-                            <Route path="/projects" element={<ProjectsPage/>}/>
-                            <Route path="/profile" element={<ProfilePage/>}/>
-                            <Route path="/" element={<Navigate to="/projects"/>}/>
+                            <Route path="/projects/:id" element={<ProjectDetailPage />} />
+                            <Route path="/projects" element={<ProjectsPage />} />
+                            <Route path="/quizes" element={<QuizPage />} />
+                            <Route path="/quizTake" element={<QuizTakePage type={'CRYPTO'} />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/" element={<Navigate to="/projects" />} />
                         </Routes>
                     </Content>
                 </LoggedInContainer>
@@ -67,10 +68,7 @@ const DashboardPage = () => {
         );
     }
 
-    return (<>
-    NOT LOGGED IN
-    </>)
-
+    return <>NOT LOGGED IN</>;
 };
 
 export default DashboardPage;

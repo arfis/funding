@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/arfis/crowd-funding/gateway/internal/dbModels"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -16,7 +17,8 @@ var (
 
 func Migrate() {
 	dbConnection := GetConnection()
-	err := dbConnection.AutoMigrate(&Project{}, &Investment{})
+
+	err := dbConnection.AutoMigrate(&dbModels.Project{}, &dbModels.Investment{}, &dbModels.Quiz{}, &dbModels.QuizTake{}, &dbModels.QuizQuestion{}, &dbModels.Answer{})
 
 	if err != nil {
 		fmt.Printf("There was an error while migrating")
@@ -37,7 +39,9 @@ func GetConnection() *gorm.DB {
 			host, user, password, dbname, port, sslmode, timeZone)
 
 		// Connect to the database using GORM
-		connectedDb, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		connectedDb, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+			//Logger: logger.Default.LogMode(logger.Info),
+		})
 		if err != nil {
 			log.Fatalf("Failed to connect to database: %v", err)
 		} else {

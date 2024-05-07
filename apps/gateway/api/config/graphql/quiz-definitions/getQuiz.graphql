@@ -1,0 +1,15 @@
+query GetQuiz($id: ID!) {
+    getQuiz(id: $id) {
+        id
+        description
+        type
+        questions {
+            description
+            answerType
+            answers {
+                description
+                id
+            }
+        }
+    }
+}

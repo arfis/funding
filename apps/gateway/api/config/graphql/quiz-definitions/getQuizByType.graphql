@@ -1,0 +1,16 @@
+query GetQuizByType($type: String!) {
+    getQuizByType(type: $type) {
+        id
+        description
+        type
+        questions {
+            id
+            description
+            answerType
+            answers {
+                description
+                id
+            }
+        }
+    }
+}

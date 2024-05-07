@@ -18,7 +18,6 @@ const LoginPage = () => {
     const dispatch = useDispatch();
 
     const handleGoogleLogin = () => {
-        console.log("Login with Google");
         window.location.href = "http://localhost:3000/login";
         // dispatch(setUser({ name: 'John Doe', email: 'john@example.com' }));
         // Implement your login logic here

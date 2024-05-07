@@ -1,53 +1,56 @@
-import React, {useContext} from 'react';
-import styled from 'styled-components';
-import {Project} from './components/project';
-import {useGetAllProjectsQuery} from '../../../../generated/graphql';
+import React, {useContext, useState} from 'react';
+import {Project, useGetAllProjectsQuery} from '../../../../generated/graphql';
 import {UserContext} from '../dashboard/dashboard-page';
 import ProjectForm from './components/createProjectForm';
+import DockedLayout from '../components/DockeredLayout';
+import ProjectTile from './components/projectTile';
+import styled from 'styled-components';
 
-const ProjectsContainer = styled.div`
+const ProjectList = styled.div`
+    width: 100%;
     display: flex;
-    flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
-    padding: 20px;
-    box-sizing: border-box;
-    column-gap: 20px;
+    background-color: #ffffff;
 `;
 
 const ProjectsPage = () => {
-    const user = useContext(UserContext)
+    const user = useContext(UserContext);
     const {loading, error, data} = useGetAllProjectsQuery();
+    const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
 
     const investIntoProject = (projectId: string) => {
-        console.log('USER ' + user?.name + ' IS INVESTING INTO ' + projectId);
+        console.log('USER ' + user?.userName + ' IS INVESTING INTO ' + projectId);
     }
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error! {error.message}</p>;
 
-    return (
-        <>
-            <h1>Projects</h1>
-            <ProjectForm></ProjectForm>
-            <ProjectsContainer>
-                {
-                    data && !!data.getAllProjects && data.getAllProjects!.map(project =>
-
-                    project ?
-                        <Project key={project.name}
-                                 id={project.id}
-                                 name={project.name}
-                                 description={project.description}
-                                 availableAllocation={project.allocation}
-                                 investClick={() => investIntoProject(project.id)}
-                        />
-                        : null
-                    )
+    if (data!.getAllProjects!.length > 0) {
+        return (
+            <DockedLayout
+                dockedContent={projectToEdit && (
+                    <ProjectForm project={projectToEdit} onCancel={() => setProjectToEdit(null)}/>
+                )}
+                listContent={
+                    <ProjectList>
+                        {data && !!data.getAllProjects && data.getAllProjects.map(project =>
+                            project ? (
+                                <ProjectTile
+                                    key={project.id}
+                                    project={project}
+                                    editClick={() => setProjectToEdit(project)}
+                                    investClick={() => investIntoProject(project.id)}
+                                />
+                            ) : null
+                        )}
+                    </ProjectList>
                 }
-            </ProjectsContainer>
-        </>
-    );
+            />
+        );
+    } else {
+        <div>There are currently no projects available</div>
+    }
+
 };
 
 export default ProjectsPage;

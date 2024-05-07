@@ -6,7 +6,9 @@ mutation CreateProject(
     $allocation: Int,
     $startDate: String,
     $endDate: String,
-    $approved: Boolean
+    $approved: Boolean,
+    $minInvestment: Int,
+    $maxInvestment: Int
 ) {
     createProject(
         name: $name,
@@ -16,7 +18,9 @@ mutation CreateProject(
         allocation: $allocation,
         startDate: $startDate,
         endDate: $endDate,
-        approved: $approved
+        approved: $approved,
+        minInvestment: $minInvestment,
+        maxInvestment: $maxInvestment
     ) {
         id
         name
@@ -28,5 +32,7 @@ mutation CreateProject(
         endDate
         ownerId
         approved
+        maxInvestment
+        minInvestment
     }
 }

@@ -8,9 +8,11 @@ import App from './app/app';
 import client from './app/api/graphqlClient';
 import {ApolloProvider} from '@apollo/client';
 
+
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
+
 root.render(
     <StrictMode>
         <BrowserRouter>

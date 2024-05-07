@@ -2,16 +2,16 @@ package authorization
 
 import (
 	"fmt"
+	"github.com/arfis/crowd-funding/authorization/internal/tokenHandler"
 	"net/http"
-	"time"
 )
 
-func HandleRedirection(w http.ResponseWriter, r *http.Request, jwtToken string) {
-	expiration := time.Now().Add(1 * time.Hour)
+func HandleRedirection(w http.ResponseWriter, r *http.Request, tokenWithExpiration *tokenHandler.TokenWithExpiration) {
+	// todo the expiration should be the same as the token has
 	cookie := &http.Cookie{
-		Name:     "Token",
-		Value:    jwtToken,
-		Expires:  expiration,
+		Name:     "AuthToken",
+		Value:    tokenWithExpiration.Token,
+		Expires:  tokenWithExpiration.Expiration,
 		HttpOnly: false, // Ensures the cookie is sent only in HTTP(S) requests and not accessible through JavaScript
 		Path:     "/",   // The cookie is available to all paths
 	}

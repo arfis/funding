@@ -1,0 +1,19 @@
+query GetQuizes {
+    getAllQuizes {
+        id
+        description
+        type
+        minimalPointsToSuccess
+        questions {
+            id
+            description
+            answerType
+            answers {
+                description
+                isRight
+                quizQuestionId
+                id
+            }
+        }
+    }
+}

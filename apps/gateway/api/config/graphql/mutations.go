@@ -3,15 +3,19 @@ package graphqlImpl
 import (
 	"fmt"
 	database "github.com/arfis/crowd-funding/gateway/internal/db"
-	"github.com/arfis/crowd-funding/gateway/internal/service"
+	"github.com/arfis/crowd-funding/gateway/internal/dbModels"
+	"github.com/arfis/crowd-funding/gateway/internal/services/authorization"
+	"github.com/arfis/crowd-funding/gateway/pkg/enum"
+	"github.com/arfis/crowd-funding/gateway/pkg/service"
 	"github.com/google/uuid"
 	"github.com/graphql-go/graphql"
-	"net/http"
+	"log"
 	"time"
 )
 
 var (
 	projectService service.ProjectService
+	quizService    service.QuizService
 )
 
 var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
@@ -41,103 +45,73 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				"endDate": &graphql.ArgumentConfig{
 					Type: graphql.String,
 				},
+				"minInvestment": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"maxInvestment": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
 				"approved": &graphql.ArgumentConfig{
 					Type: graphql.Boolean,
 				},
-				// Add other fields similarly
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-
-				headers, headersOk := params.Context.Value("headers").(http.Header)
-
-				fmt.Printf("\n The headers are %v %v", headers, headersOk)
-				// When parsing a string to time.Time
-				startDate, err := time.Parse(time.RFC3339, params.Args["startDate"].(string))
-				endDate, err := time.Parse(time.RFC3339, params.Args["startDate"].(string))
-
-				//// When sending time.Time to the client
-				//startDateString := startDate.Format(time.RFC3339)
-				//endDateString := endDate.Format(time.RFC3339)
-
-				var (
-					ownerId  uuid.UUID
-					parseErr error
-				)
-				ownerIdString := "abb55e3c-8903-467c-ac27-b240de5aafed"
-				if params.Args["ownerId"] != nil {
-					ownerId, parseErr = uuid.Parse(params.Args["ownerId"].(string))
-				} else {
-					ownerId, parseErr = uuid.Parse(ownerIdString)
+				userDetail, ok := params.Context.Value("userDetail").(*authorization.JwtTokenContent)
+				if !ok {
+					return nil, fmt.Errorf("user not found")
 				}
 
-				if parseErr != nil {
-					fmt.Printf("\n There was an error parsing")
+				startDate, err := parseDate(params.Args["startDate"].(string))
+				endDate, err := parseDate(params.Args["startDate"].(string))
+				if err != nil {
+					return nil, err
 				}
-
 				var approved bool
 				if approvedArg, ok := params.Args["approved"]; ok {
-					// Now, check if it's of the type you expect
 					approvedValue, ok := approvedArg.(bool)
 					if !ok {
 						return nil, fmt.Errorf("approved must be a boolean")
 					}
 					approved = approvedValue
 				} else {
-					// Set a default value or handle the missing value
-					approved = false // Default to false, or handle as appropriate
+					approved = false
 				}
 
-				project := database.Project{
-					ID:          uuid.New(), // Generate a new UUID
-					Name:        params.Args["name"].(string),
-					Type:        params.Args["type"].(string),
-					ImageUrl:    params.Args["imageUrl"].(string),
-					Description: params.Args["description"].(string),
-					Allocation:  params.Args["allocation"].(int),
-					OwnerId:     &ownerId,
-					Approved:    approved,
-					StartDate:   startDate,
-					EndDate:     endDate,
+				typeStr := params.Args["type"].(string)
+				investmentTypeEnum, err := enum.ParseInvestmentType(typeStr)
+
+				if err != nil {
+					return nil, err
 				}
+
+				imageUrl, _ := params.Args["imageUrl"].(string)
+				allocation, _ := params.Args["allocation"].(int)
+				minInvestment, _ := params.Args["minInvestment"].(int)
+				maxInvestment, _ := params.Args["maxInvestment"].(int)
+
+				project := dbModels.Project{
+					ID:            uuid.New(),
+					Name:          params.Args["name"].(string),
+					Type:          investmentTypeEnum,
+					ImageUrl:      imageUrl,
+					Description:   params.Args["description"].(string),
+					Allocation:    allocation,
+					OwnerId:       &userDetail.UserID,
+					Approved:      approved,
+					StartDate:     startDate,
+					EndDate:       endDate,
+					MaxInvestment: maxInvestment,
+					MinInvestment: minInvestment,
+				}
+
 				createdProject, err := projectService.CreateProject(&project)
 				if err != nil {
 					return nil, err
-
 				}
 				return createdProject, nil
 			},
 		},
-		"updateProject": &graphql.Field{
-			Type: projectType,
-			Args: graphql.FieldConfigArgument{
-				"id":          &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.ID)},
-				"name":        &graphql.ArgumentConfig{Type: graphql.String},
-				"type":        &graphql.ArgumentConfig{Type: graphql.String},
-				"imageUrl":    &graphql.ArgumentConfig{Type: graphql.String},
-				"description": &graphql.ArgumentConfig{Type: graphql.String},
-				"allocation":  &graphql.ArgumentConfig{Type: graphql.Int},
-				"ownerId":     &graphql.ArgumentConfig{Type: graphql.ID},
-				"approved":    &graphql.ArgumentConfig{Type: graphql.Boolean},
-				"startDate":   &graphql.ArgumentConfig{Type: graphql.String},
-				"endDate":     &graphql.ArgumentConfig{Type: graphql.String},
-			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-				var project database.Project
-				id := uuid.MustParse(params.Args["id"].(string))
-
-				// Update fields that are provided
-				if name, ok := params.Args["name"].(string); ok {
-					project.Name = name
-				}
-
-				if approved, ok := params.Args["approved"].(bool); ok {
-					project.Approved = approved
-				}
-				// Repeat for other fields...
-
-				return projectService.UpdateProject(id, &project)
-			},
-		},
+		"updateProject": updateProjectMutation,
 		"deleteProject": &graphql.Field{
 			Type: projectType,
 			Args: graphql.FieldConfigArgument{
@@ -147,17 +121,13 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				id := params.Args["id"].(uuid.UUID)
-				// Assume GetProjectByID fetches a project by its UUID
 				return projectService.DeleteProject(id)
 			},
 		},
 		"createInvestment": &graphql.Field{
-			Type: investmentType, // Assuming you have defined this type similar to projectType
+			Type: investmentType,
 			Args: graphql.FieldConfigArgument{
 				"projectId": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.ID),
-				},
-				"userId": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.ID),
 				},
 				"amount": &graphql.ArgumentConfig{
@@ -165,11 +135,13 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				userDetail, ok := params.Context.Value("userDetail").(*authorization.JwtTokenContent)
+				if !ok {
+					log.Println("UserID not found or is not of type uuid.UUID")
+					return nil, fmt.Errorf("user not found")
+				}
 				projectId, _ := uuid.Parse(params.Args["projectId"].(string))
-				userId, _ := uuid.Parse(params.Args["userId"].(string))
 				amount := params.Args["amount"].(int)
-
-				// Validate project exists and can receive investments
 				project, err := projectService.GetProjectByID(projectId)
 				if err != nil {
 					return nil, fmt.Errorf("project not found")
@@ -177,24 +149,128 @@ var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 				if !project.Approved {
 					return nil, fmt.Errorf("project not approved for investments")
 				}
-
-				// Create and save the new investment
-				investment := database.Investment{
+				userInvestment := dbModels.Investment{
 					ID:        uuid.New(),
 					ProjectID: projectId,
-					UserID:    userId,
+					UserID:    userDetail.UserID,
 					Amount:    amount,
 				}
-
 				investmentService := service.NewInvestmentService(database.GetConnection())
-				createdInvestment, err := investmentService.CreateInvestment(&investment)
-
+				createdInvestment, err := investmentService.CreateInvestment(&userInvestment)
 				if err != nil {
 					return nil, fmt.Errorf(err.Error())
 				}
-
 				return createdInvestment, nil
 			},
 		},
+		"createQuiz":       createQuizMutation,
+		"submitQuizAnswer": submitQuizAnswerMutation,
+		"updateQuiz":       updateQuizMutation,
 	},
 })
+
+var updateProjectMutation = &graphql.Field{
+	Type: projectType,
+	Args: graphql.FieldConfigArgument{
+		"id": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.ID),
+		},
+		"input": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(updateProjectInputType),
+		},
+	},
+	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+		//userID, ok := params.Context.Value("userID").(*uuid.UUID)
+		//if !ok {
+		//	return nil, fmt.Errorf("user not found")
+		//}
+
+		// Fetch the project by ID
+		projectID, err := uuid.Parse(params.Args["id"].(string))
+		if err != nil {
+			return nil, fmt.Errorf("invalid project ID")
+		}
+
+		existingProject, err := projectService.GetProjectByID(projectID)
+		if err != nil {
+			return nil, fmt.Errorf("project not found")
+		}
+
+		input := params.Args["input"].(map[string]interface{})
+
+		// Update project fields
+		if name, ok := input["name"].(string); ok {
+			existingProject.Name = name
+		}
+		if description, ok := input["description"].(string); ok {
+			existingProject.Description = description
+		}
+		if typeStr, ok := input["type"].(string); ok {
+			investmentTypeEnum, err := enum.ParseInvestmentType(typeStr)
+			if err != nil {
+				return nil, err
+			}
+			existingProject.Type = investmentTypeEnum
+		}
+		if imageUrl, ok := input["imageUrl"].(string); ok {
+			existingProject.ImageUrl = imageUrl
+		}
+		if allocation, ok := input["allocation"].(int); ok {
+			existingProject.Allocation = allocation
+		}
+		if startDateStr, ok := input["startDate"].(string); ok {
+			startDate, err := parseDate(startDateStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid start date format: %v", err)
+			}
+			existingProject.StartDate = startDate
+		}
+		if endDateStr, ok := input["endDate"].(string); ok {
+			endDate, err := parseDate(endDateStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid end date format: %v", err)
+			}
+			existingProject.EndDate = endDate
+		}
+		if minInvestment, ok := input["minInvestment"].(int); ok {
+			existingProject.MinInvestment = minInvestment
+		}
+		if maxInvestment, ok := input["maxInvestment"].(int); ok {
+			existingProject.MaxInvestment = maxInvestment
+		}
+		if approvedArg, ok := input["approved"]; ok {
+			approvedValue, ok := approvedArg.(bool)
+			if !ok {
+				return nil, fmt.Errorf("approved must be a boolean")
+			}
+			existingProject.Approved = approvedValue
+		}
+
+		// Ensure the ownerId is not changed
+		existingProject.OwnerId = existingProject.OwnerId
+
+		// Save the updated project
+		updatedProject, err := projectService.UpdateProject(existingProject)
+		if err != nil {
+			return nil, err
+		}
+
+		return updatedProject, nil
+	},
+}
+
+func parseDate(dateStr string) (time.Time, error) {
+	dateFormats := []string{
+		time.RFC3339,             // "2006-01-02T15:04:05Z07:00"
+		"2006-01-02T15:04",       // "2006-01-02T15:04"
+		"2006-01-02T15:04-07:00", // "2006-01-02T15:04-07:00"
+	}
+
+	for _, format := range dateFormats {
+		if date, err := time.Parse(format, dateStr); err == nil {
+			return date, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("invalid date format")
+}

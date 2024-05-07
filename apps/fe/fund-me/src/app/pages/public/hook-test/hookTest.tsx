@@ -22,7 +22,6 @@ const HookTest = () => {
     const inputElement = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        console.log('NUMBER HAS CHANGED')
         if (inputElement.current) {
             inputElement.current.value = String(previousValue.current);
         }
@@ -31,17 +30,14 @@ const HookTest = () => {
 
     useEffect(() => {
         renderCount.current = renderCount.current + 1;
-        console.log('WAS RENDEREED')
     })
 
     useEffect(() => {
 
         const timer = setTimeout(() => updateNumber(), 5000);
-        console.log('RENDER');
 
         return () => {
             clearTimeout(timer);
-            console.log('CLEARING')
         }
     }, []);
 

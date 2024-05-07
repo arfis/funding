@@ -4,6 +4,8 @@ query GetProject($id: ID!) {
         name
         description
         freeAllocation
+        hasPermissionToEdit
+        hasPermissionToInvest
         investments {
             amount
         }

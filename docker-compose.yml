@@ -37,7 +37,9 @@ services:
       DB_USER: user
       DB_NAME: shared_db
       DB_PASSWORD: password
-
+      ACCESS_TOKEN_VALIDITY_SECONDS: 3000
+      AUTH_GOOGLE_CLIENT_ID: ""
+      AUTH_GOOGLE_SECRET: ""
 
   api:
     build:
@@ -62,6 +64,8 @@ services:
     environment:
       KAFKA_URL: "kafka:29092"
       AUTHORIZATION_SERVICE_URL: "http://authorization:8080"
+      INVESTMENT_LOCK_MINUTES: 3600
+      DEBUG_MODE: true
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: user

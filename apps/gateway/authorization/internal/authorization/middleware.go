@@ -2,6 +2,7 @@ package authorization
 
 import (
 	"fmt"
+	"github.com/arfis/crowd-funding/authorization/internal/tokenHandler"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 )
@@ -29,7 +30,7 @@ func TokenAuthMiddleware(next http.Handler) http.Handler {
 
 		// Parse the JWT string and store the result in `claims`
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtKey, nil
+			return tokenHandler.JwtKey, nil
 		})
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {

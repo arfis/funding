@@ -1,9 +1,25 @@
 query GetAllProjects {
-         getAllProjects {
-             id
-             name
-             freeAllocation
-             description
-             allocation
-         }
-     }
+    getAllProjects {
+        id
+        hasPermissionToEdit
+        hasPermissionToInvest
+        name
+        type
+        imageUrl
+        description
+        allocation
+        startDate
+        endDate
+        ownerId
+        approved
+        maxInvestment
+        minInvestment
+        freeAllocation
+        investments {
+            id
+            projectId
+            userId
+            amount
+        }
+    }
+}

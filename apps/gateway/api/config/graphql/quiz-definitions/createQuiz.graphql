@@ -1,0 +1,18 @@
+mutation CreateQuiz($input: QuizInput!) {
+    createQuiz(input: $input) {
+        id
+        description
+        type
+        minimalPointsToSuccess
+        questions {
+            id
+            description
+            answerType
+            answers {
+                id
+                description
+                isRight
+            }
+        }
+    }
+}

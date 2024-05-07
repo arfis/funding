@@ -40,3 +40,10 @@ func GetConnection() *gorm.DB {
 
 	return connection
 }
+
+func Migrate() {
+	dbConnection := GetConnection()
+	if err := dbConnection.AutoMigrate(&User{}); err != nil {
+		fmt.Errorf("there was a problem with the migration")
+	}
+}

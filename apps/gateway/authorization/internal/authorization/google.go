@@ -3,6 +3,9 @@ package authorization
 import (
 	"encoding/json"
 	"fmt"
+	database "github.com/arfis/crowd-funding/authorization/internal/db"
+	"github.com/arfis/crowd-funding/authorization/internal/tokenHandler"
+	"github.com/arfis/crowd-funding/authorization/pkg/user"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"io"
@@ -77,7 +80,21 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtToken, err := generateJWT(userInfo.ID, userInfo.Email, 72)
+	fmt.Printf("\nUser from google %v", userInfo)
+	dbUser := &database.User{
+		ExternalID:   userInfo.ID,
+		Username:     userInfo.GivenName,
+		Email:        userInfo.Email,
+		AvatarURL:    userInfo.Picture,
+		Provider:     "GOOGLE",
+		PasswordHash: "",
+	}
+
+	if dbUser, err = user.CreateUser(dbUser); err != nil {
+		fmt.Errorf("there was an error creating the user")
+	}
+
+	tokenWithExpiration, err := tokenHandler.GenerateJWT(dbUser)
 	if err != nil {
 		http.Error(w, "Failed to generate JWT", http.StatusInternalServerError)
 		return
@@ -86,7 +103,7 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Here, you would generally set the JWT token in an HTTP-only cookie, or return it in the response body
 	//w.Header().Set("Token", jwtToken)
 
-	HandleRedirection(w, r, jwtToken)
+	HandleRedirection(w, r, tokenWithExpiration)
 
 	defer resp.Body.Close()
 	// Read and handle response from Google to get user data, typically decode JSON response
