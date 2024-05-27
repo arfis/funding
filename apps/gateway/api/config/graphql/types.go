@@ -58,23 +58,62 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 		"allocation": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
 		},
+		"startDate": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"endDate": &graphql.Field{
+			Type: graphql.String,
+		},
 		"ownerId": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.ID),
 		},
 		"approved": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Boolean),
 		},
-		"startDate": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.String),
-		},
-		"endDate": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.String),
+		"maxInvestment": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Int),
 		},
 		"minInvestment": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
 		},
-		"maxInvestment": &graphql.Field{
-			Type: graphql.NewNonNull(graphql.Int),
+		"dealDate": &graphql.Field{
+			Type: graphql.String,
+		},
+		"tokenPrice": &graphql.Field{
+			Type: graphql.String,
+		},
+		"vesting": &graphql.Field{
+			Type: graphql.String,
+		},
+		"totalRaisingAmount": &graphql.Field{
+			Type: graphql.String,
+		},
+		"syndicateRaisingAmount": &graphql.Field{
+			Type: graphql.String,
+		},
+		"leadingInvestor": &graphql.Field{
+			Type: graphql.String,
+		},
+		"category": &graphql.Field{
+			Type: graphql.String,
+		},
+		"valuation": &graphql.Field{
+			Type: graphql.String,
+		},
+		"tge": &graphql.Field{
+			Type: graphql.String,
+		},
+		"claim": &graphql.Field{
+			Type: graphql.String,
+		},
+		"overview": &graphql.Field{
+			Type: graphql.String,
+		},
+		"longDescription": &graphql.Field{
+			Type: graphql.String,
+		},
+		"createdAt": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.String),
 		},
 		"investments": &graphql.Field{
 			Type: graphql.NewList(investmentType),
@@ -152,6 +191,78 @@ var userType = graphql.NewObject(graphql.ObjectConfig{
 		},
 		"email": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.String),
+		},
+	},
+})
+
+var createProjectInputType = graphql.NewInputObject(graphql.InputObjectConfig{
+	Name: "CreateProjectInput",
+	Fields: graphql.InputObjectConfigFieldMap{
+		"name": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"description": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"type": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"imageUrl": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"allocation": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"startDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"endDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"minInvestment": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
+		"maxInvestment": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
+		"approved": &graphql.InputObjectFieldConfig{
+			Type: graphql.Boolean,
+		},
+		"dealDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"tokenPrice": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"vesting": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"totalRaisingAmount": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"syndicateRaisingAmount": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"leadingInvestor": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"category": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"valuation": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"tge": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"claim": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"overview": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"longDescription": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
 		},
 	},
 })

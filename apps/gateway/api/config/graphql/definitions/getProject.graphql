@@ -2,13 +2,35 @@ query GetProject($id: ID!) {
     getProject(id: $id) {
         id
         name
+        type
+        imageUrl
         description
+        allocation
+        startDate
+        endDate
+        ownerId
+        approved
+        maxInvestment
+        minInvestment
+        dealDate
+        tokenPrice
+        vesting
+        totalRaisingAmount
+        syndicateRaisingAmount
+        leadingInvestor
+        category
+        valuation
+        tge
+        claim
+        overview
+        longDescription
         freeAllocation
         hasPermissionToEdit
         hasPermissionToInvest
         investments {
             amount
         }
+        createdAt
         # Add other fields as necessary
     }
 }

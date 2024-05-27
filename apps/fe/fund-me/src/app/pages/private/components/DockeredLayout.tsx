@@ -9,10 +9,10 @@ const Content = styled.div`
 `;
 
 const List = styled.div`
-    flex: 2;
     max-height: calc(100vh - ${HEADER_HEIGHT});
     position: sticky;
     overflow-y: auto;
+    width: 100%;
 `;
 
 const DockedContent = styled.div`
@@ -20,7 +20,8 @@ const DockedContent = styled.div`
     top: 10px;
     overflow-y: auto;
     height: 100%;
-    flex: 2;
+    width: 800px;
+    padding-bottom: 10px;
     max-height: calc(100vh - ${HEADER_HEIGHT});
 `;
 

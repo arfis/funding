@@ -13,11 +13,12 @@ import (
 var JwtKey = []byte("your_secret_key") // Use a secret from your environment variables
 
 type Claims struct {
-	UserID    uuid.UUID `json:"userId"`
-	Email     string    `json:"email"`
-	Username  string    `json:"username"`
-	Type      string    `json:"type"`
-	AvatarUrl string    `json:"avatarUrl"`
+	UserID     uuid.UUID `json:"userId"`
+	Email      string    `json:"email"`
+	Username   string    `json:"username"`
+	Type       string    `json:"type"`
+	AvatarUrl  string    `json:"avatarUrl"`
+	ExternalId string    `json:"externalId"`
 	jwt.StandardClaims
 }
 
@@ -38,11 +39,12 @@ func GenerateJWT(user *database.User) (*TokenWithExpiration, error) {
 
 	expirationTime := time.Now().Add(time.Duration(seconds) * time.Second) // Token is valid for 72 hours
 	claims := &Claims{
-		UserID:    user.ID,
-		Email:     user.Email,
-		Username:  user.Username,
-		Type:      user.Type,
-		AvatarUrl: user.AvatarURL,
+		UserID:     user.ID,
+		Email:      user.Email,
+		Username:   user.Username,
+		Type:       user.Type,
+		AvatarUrl:  user.AvatarURL,
+		ExternalId: user.ExternalID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

@@ -30,6 +30,31 @@ export type AnswerInput = {
   isRight: Scalars['Boolean']['input'];
 };
 
+export type CreateProjectInput = {
+  allocation: Scalars['Int']['input'];
+  approved?: InputMaybe<Scalars['Boolean']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  claim?: InputMaybe<Scalars['String']['input']>;
+  dealDate?: InputMaybe<Scalars['String']['input']>;
+  description: Scalars['String']['input'];
+  endDate?: InputMaybe<Scalars['String']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  leadingInvestor?: InputMaybe<Scalars['String']['input']>;
+  longDescription?: InputMaybe<Scalars['String']['input']>;
+  maxInvestment?: InputMaybe<Scalars['Int']['input']>;
+  minInvestment?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  overview?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['String']['input']>;
+  syndicateRaisingAmount?: InputMaybe<Scalars['String']['input']>;
+  tge?: InputMaybe<Scalars['String']['input']>;
+  tokenPrice?: InputMaybe<Scalars['String']['input']>;
+  totalRaisingAmount?: InputMaybe<Scalars['String']['input']>;
+  type: Scalars['String']['input'];
+  valuation?: InputMaybe<Scalars['String']['input']>;
+  vesting?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Investment = {
   __typename?: 'Investment';
   amount: Scalars['Int']['output'];
@@ -63,16 +88,7 @@ export type MutationCreateInvestmentArgs = {
 
 
 export type MutationCreateProjectArgs = {
-  allocation?: InputMaybe<Scalars['Int']['input']>;
-  approved?: InputMaybe<Scalars['Boolean']['input']>;
-  description: Scalars['String']['input'];
-  endDate?: InputMaybe<Scalars['String']['input']>;
-  imageUrl?: InputMaybe<Scalars['String']['input']>;
-  maxInvestment?: InputMaybe<Scalars['Int']['input']>;
-  minInvestment?: InputMaybe<Scalars['Int']['input']>;
-  name: Scalars['String']['input'];
-  startDate?: InputMaybe<Scalars['String']['input']>;
-  type: Scalars['String']['input'];
+  input: CreateProjectInput;
 };
 
 
@@ -106,20 +122,33 @@ export type Project = {
   __typename?: 'Project';
   allocation: Scalars['Int']['output'];
   approved: Scalars['Boolean']['output'];
+  category?: Maybe<Scalars['String']['output']>;
+  claim?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['String']['output'];
+  dealDate?: Maybe<Scalars['String']['output']>;
   description: Scalars['String']['output'];
-  endDate: Scalars['String']['output'];
+  endDate?: Maybe<Scalars['String']['output']>;
   freeAllocation?: Maybe<Scalars['Int']['output']>;
   hasPermissionToEdit: Scalars['Boolean']['output'];
   hasPermissionToInvest: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   imageUrl?: Maybe<Scalars['String']['output']>;
   investments?: Maybe<Array<Maybe<Investment>>>;
+  leadingInvestor?: Maybe<Scalars['String']['output']>;
+  longDescription?: Maybe<Scalars['String']['output']>;
   maxInvestment: Scalars['Int']['output'];
   minInvestment: Scalars['Int']['output'];
   name: Scalars['String']['output'];
+  overview?: Maybe<Scalars['String']['output']>;
   ownerId: Scalars['ID']['output'];
   startDate: Scalars['String']['output'];
+  syndicateRaisingAmount?: Maybe<Scalars['String']['output']>;
+  tge?: Maybe<Scalars['String']['output']>;
+  tokenPrice?: Maybe<Scalars['String']['output']>;
+  totalRaisingAmount?: Maybe<Scalars['String']['output']>;
   type: InvestmentType;
+  valuation?: Maybe<Scalars['String']['output']>;
+  vesting?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
@@ -217,12 +246,12 @@ export type GetProjectQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectQuery = { __typename?: 'Query', getProject?: { __typename?: 'Project', id: string, name: string, description: string, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, investments?: Array<{ __typename?: 'Investment', amount: number } | null> | null } | null };
+export type GetProjectQuery = { __typename?: 'Query', getProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, vesting?: string | null, totalRaisingAmount?: string | null, syndicateRaisingAmount?: string | null, leadingInvestor?: string | null, category?: string | null, valuation?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, investments?: Array<{ __typename?: 'Investment', amount: number } | null> | null } | null };
 
 export type GetAllProjectsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllProjectsQuery = { __typename?: 'Query', getAllProjects?: Array<{ __typename?: 'Project', id: string, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate: string, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, freeAllocation?: number | null, investments?: Array<{ __typename?: 'Investment', id: string, projectId: string, userId: string, amount: number } | null> | null } | null> | null };
+export type GetAllProjectsQuery = { __typename?: 'Query', getAllProjects?: Array<{ __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, investments?: Array<{ __typename?: 'Investment', id: string, projectId: string, userId: string, amount: number } | null> | null } | null> | null };
 
 export type CreateInvestmentMutationVariables = Exact<{
   projectId: Scalars['ID']['input'];
@@ -233,20 +262,18 @@ export type CreateInvestmentMutationVariables = Exact<{
 export type CreateInvestmentMutation = { __typename?: 'Mutation', createInvestment?: { __typename?: 'Investment', id: string, amount: number } | null };
 
 export type CreateProjectMutationVariables = Exact<{
-  name: Scalars['String']['input'];
-  description: Scalars['String']['input'];
-  type: Scalars['String']['input'];
-  imageUrl?: InputMaybe<Scalars['String']['input']>;
-  allocation?: InputMaybe<Scalars['Int']['input']>;
-  startDate?: InputMaybe<Scalars['String']['input']>;
-  endDate?: InputMaybe<Scalars['String']['input']>;
-  approved?: InputMaybe<Scalars['Boolean']['input']>;
-  minInvestment?: InputMaybe<Scalars['Int']['input']>;
-  maxInvestment?: InputMaybe<Scalars['Int']['input']>;
+  input: CreateProjectInput;
 }>;
 
 
-export type CreateProjectMutation = { __typename?: 'Mutation', createProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate: string, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number } | null };
+export type CreateProjectMutation = { __typename?: 'Mutation', createProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number } | null };
+
+export type DeleteProjectMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteProjectMutation = { __typename?: 'Mutation', deleteProject?: { __typename?: 'Project', id: string } | null };
 
 export type UpdateProjectMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -254,7 +281,7 @@ export type UpdateProjectMutationVariables = Exact<{
 }>;
 
 
-export type UpdateProjectMutation = { __typename?: 'Mutation', updateProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate: string, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number } | null };
+export type UpdateProjectMutation = { __typename?: 'Mutation', updateProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number } | null };
 
 export type CreateQuizMutationVariables = Exact<{
   input: QuizInput;
@@ -308,13 +335,35 @@ export const GetProjectDocument = gql`
   getProject(id: $id) {
     id
     name
+    type
+    imageUrl
     description
+    allocation
+    startDate
+    endDate
+    ownerId
+    approved
+    maxInvestment
+    minInvestment
+    dealDate
+    tokenPrice
+    vesting
+    totalRaisingAmount
+    syndicateRaisingAmount
+    leadingInvestor
+    category
+    valuation
+    tge
+    claim
+    overview
+    longDescription
     freeAllocation
     hasPermissionToEdit
     hasPermissionToInvest
     investments {
       amount
     }
+    createdAt
   }
 }
     `;
@@ -355,8 +404,6 @@ export const GetAllProjectsDocument = gql`
     query GetAllProjects {
   getAllProjects {
     id
-    hasPermissionToEdit
-    hasPermissionToInvest
     name
     type
     imageUrl
@@ -368,13 +415,22 @@ export const GetAllProjectsDocument = gql`
     approved
     maxInvestment
     minInvestment
+    dealDate
+    tokenPrice
+    tge
+    claim
+    overview
+    longDescription
     freeAllocation
+    hasPermissionToEdit
+    hasPermissionToInvest
     investments {
       id
       projectId
       userId
       amount
     }
+    createdAt
   }
 }
     `;
@@ -446,19 +502,8 @@ export type CreateInvestmentMutationHookResult = ReturnType<typeof useCreateInve
 export type CreateInvestmentMutationResult = Apollo.MutationResult<CreateInvestmentMutation>;
 export type CreateInvestmentMutationOptions = Apollo.BaseMutationOptions<CreateInvestmentMutation, CreateInvestmentMutationVariables>;
 export const CreateProjectDocument = gql`
-    mutation CreateProject($name: String!, $description: String!, $type: String!, $imageUrl: String, $allocation: Int, $startDate: String, $endDate: String, $approved: Boolean, $minInvestment: Int, $maxInvestment: Int) {
-  createProject(
-    name: $name
-    description: $description
-    type: $type
-    imageUrl: $imageUrl
-    allocation: $allocation
-    startDate: $startDate
-    endDate: $endDate
-    approved: $approved
-    minInvestment: $minInvestment
-    maxInvestment: $maxInvestment
-  ) {
+    mutation CreateProject($input: CreateProjectInput!) {
+  createProject(input: $input) {
     id
     name
     type
@@ -489,16 +534,7 @@ export type CreateProjectMutationFn = Apollo.MutationFunction<CreateProjectMutat
  * @example
  * const [createProjectMutation, { data, loading, error }] = useCreateProjectMutation({
  *   variables: {
- *      name: // value for 'name'
- *      description: // value for 'description'
- *      type: // value for 'type'
- *      imageUrl: // value for 'imageUrl'
- *      allocation: // value for 'allocation'
- *      startDate: // value for 'startDate'
- *      endDate: // value for 'endDate'
- *      approved: // value for 'approved'
- *      minInvestment: // value for 'minInvestment'
- *      maxInvestment: // value for 'maxInvestment'
+ *      input: // value for 'input'
  *   },
  * });
  */
@@ -509,6 +545,39 @@ export function useCreateProjectMutation(baseOptions?: Apollo.MutationHookOption
 export type CreateProjectMutationHookResult = ReturnType<typeof useCreateProjectMutation>;
 export type CreateProjectMutationResult = Apollo.MutationResult<CreateProjectMutation>;
 export type CreateProjectMutationOptions = Apollo.BaseMutationOptions<CreateProjectMutation, CreateProjectMutationVariables>;
+export const DeleteProjectDocument = gql`
+    mutation DeleteProject($id: ID!) {
+  deleteProject(id: $id) {
+    id
+  }
+}
+    `;
+export type DeleteProjectMutationFn = Apollo.MutationFunction<DeleteProjectMutation, DeleteProjectMutationVariables>;
+
+/**
+ * __useDeleteProjectMutation__
+ *
+ * To run a mutation, you first call `useDeleteProjectMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteProjectMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteProjectMutation, { data, loading, error }] = useDeleteProjectMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteProjectMutation(baseOptions?: Apollo.MutationHookOptions<DeleteProjectMutation, DeleteProjectMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteProjectMutation, DeleteProjectMutationVariables>(DeleteProjectDocument, options);
+      }
+export type DeleteProjectMutationHookResult = ReturnType<typeof useDeleteProjectMutation>;
+export type DeleteProjectMutationResult = Apollo.MutationResult<DeleteProjectMutation>;
+export type DeleteProjectMutationOptions = Apollo.BaseMutationOptions<DeleteProjectMutation, DeleteProjectMutationVariables>;
 export const UpdateProjectDocument = gql`
     mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
   updateProject(id: $id, input: $input) {

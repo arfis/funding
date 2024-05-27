@@ -13,6 +13,14 @@ import (
 	"os"
 )
 
+type TokenRequest struct {
+	Token string `json:"token"`
+}
+type WalletAssignment struct {
+	GoogleToken   string `json:"googleToken"`
+	WalletAddress string `json:"walletAddress"`
+}
+
 type GoogleUserInfo struct {
 	ID            string `json:"id"`
 	Email         string `json:"email"`
@@ -109,4 +117,36 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Read and handle response from Google to get user data, typically decode JSON response
 
 	// Handle login logic, session creation, etc.
+}
+
+func assignWalletHandler(w http.ResponseWriter, r *http.Request) {
+	var wa WalletAssignment
+	err := json.NewDecoder(r.Body).Decode(&wa)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	googleID, err := tokenHandler.ValidateJWT(wa.GoogleToken)
+	if err != nil {
+		http.Error(w, "Invalid Google token", http.StatusUnauthorized)
+		return
+	}
+
+	var user database.User
+	db := database.GetConnection()
+	if err := db.Where("google_id = ?", googleID).First(&user).Error; err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	user.WalletAddress = wa.WalletAddress
+	db.Save(&user)
+
+	response := map[string]string{
+		"status":  "success",
+		"message": "Wallet address assigned successfully",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

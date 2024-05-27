@@ -1,27 +1,5 @@
-mutation CreateProject(
-    $name: String!,
-    $description: String!,
-    $type: String!,
-    $imageUrl: String,
-    $allocation: Int,
-    $startDate: String,
-    $endDate: String,
-    $approved: Boolean,
-    $minInvestment: Int,
-    $maxInvestment: Int
-) {
-    createProject(
-        name: $name,
-        description: $description,
-        type: $type,
-        imageUrl: $imageUrl,
-        allocation: $allocation,
-        startDate: $startDate,
-        endDate: $endDate,
-        approved: $approved,
-        minInvestment: $minInvestment,
-        maxInvestment: $maxInvestment
-    ) {
+mutation CreateProject($input: CreateProjectInput!) {
+    createProject(input: $input) {
         id
         name
         type

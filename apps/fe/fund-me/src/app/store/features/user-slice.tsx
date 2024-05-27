@@ -8,6 +8,7 @@ export interface User {
     type: string;
     avatarUrl: string;
     exp: number;
+    token: string;
 }
 
 interface UserState {

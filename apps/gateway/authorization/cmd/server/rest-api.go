@@ -18,10 +18,15 @@ type TokenRequest struct {
 
 func (ra *RestApiServer) StartWebServer(port uint, terminateChan chan int) error {
 	r := mux.NewRouter()
+	fmt.Println("STARTED WEB SERVER")
+	r.Use(corsMiddleware) // Use the CORS middleware
+
 	r.HandleFunc("/validate", validateJwtToken).Methods("POST")
 	r.HandleFunc("/ping", pingHandler).Methods("GET")
 	r.HandleFunc("/login", authorization.HandleGoogleLogin).Methods("GET")
 	r.HandleFunc("/login/callback", authorization.HandleGoogleCallback).Methods("GET")
+	r.HandleFunc("/login/metamask", authorization.HandleMetaMaskLogin).Methods("POST", "OPTIONS")
+	r.HandleFunc("/assign-wallet", authorization.AssignWalletHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "AuthToken",
@@ -52,6 +57,23 @@ func (ra *RestApiServer) StartWebServer(port uint, terminateChan chan int) error
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	// This is a protected route
 	w.Write([]byte("Access to protected resource granted"))
+}
+
+// Middleware to handle CORS
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("CORS Middleware invoked for request:", r.Method, r.URL.Path)
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func validateJwtToken(w http.ResponseWriter, r *http.Request) {

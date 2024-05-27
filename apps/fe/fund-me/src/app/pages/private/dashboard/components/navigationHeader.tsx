@@ -1,8 +1,11 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {AppBar, Toolbar, IconButton, Button, Menu, MenuItem} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {Link, LinkProps, NavLink} from 'react-router-dom';
+import {ethers} from 'ethers';
+import Web3Modal from 'web3modal';
+import WalletConnectProvider from '@walletconnect/web3-provider';
 
 const Header = styled(AppBar)`
     background-color: #fff;
@@ -49,6 +52,12 @@ const LanguageButton = styled(Button)`
     text-transform: none;
 `;
 
+const WalletInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+`;
+
 interface NavigationHeaderProps {
     links: { to: string; label: string }[];
     onLogout: () => void;
@@ -56,8 +65,19 @@ interface NavigationHeaderProps {
     avatarUrl: string;
 }
 
+const ConnectButton = styled.button`
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+`;
+
 const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, userName, avatarUrl}) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [walletAddress, setWalletAddress] = useState<string>("");
+    const [balance, setBalance] = useState<string>("");
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -66,6 +86,49 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, use
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const providerOptions = {
+        walletconnect: {
+            package: WalletConnectProvider,
+            options: {
+                infuraId: "YOUR_INFURA_ID", // Required
+            },
+        },
+        // Add more wallet providers here
+    };
+
+    const web3Modal = new Web3Modal({
+        cacheProvider: true, // optional
+        providerOptions, // required
+    });
+
+    const connectWallet = async () => {
+        console.log('trying to connect')
+        if (typeof (window as any).ethereum !== 'undefined') {
+            try {
+                const provider = new ethers.BrowserProvider((window as any).ethereum);
+                await provider.send("eth_requestAccounts", []);
+                const signer = await provider.getSigner();
+                const address = await signer.getAddress();
+                console.log('ADDREESS ', address)
+                setWalletAddress(address);
+
+                const balance = await provider.getBalance(address);
+                setBalance(ethers.formatEther(balance));
+            } catch (error) {
+                console.error("User rejected the request");
+            }
+        } else {
+            console.error("MetaMask not found");
+        }
+    };
+
+    useEffect(() => {
+        console.log((window as any).ethereum)
+        if (web3Modal.cachedProvider) {
+            connectWallet();
+        }
+    });
 
     return (
         <Header position="static">
@@ -79,13 +142,21 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, use
                     ))}
                 </MenuContainer>
                 <LanguageButton>EN</LanguageButton>
+                {walletAddress && balance ? (
+                    <WalletInfo>
+                        <div>Wallet: {walletAddress}</div>
+                        <div>Balance: {balance} ETH</div>
+                    </WalletInfo>
+                ) : (
+                    <ConnectButton onClick={connectWallet}>Connect Wallet</ConnectButton>
+                )}
                 <UserDetailButton  color="inherit" onClick={handleMenu}>
                     <img src={avatarUrl} alt="User Avatar"
                          style={{marginRight: '8px', height: '30px', borderRadius: '50%'}}/>
                     {userName}
                 </UserDetailButton>
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-                    <MenuItem>Profile</MenuItem>
+                    <MenuItemLink to={"profile"}>Profile</MenuItemLink>
                     <MenuItem onClick={() => onLogout()}>Logout</MenuItem>
                 </Menu>
             </Toolbar>

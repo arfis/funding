@@ -36,7 +36,7 @@ func (projectService *ProjectService) DeleteProject(id uuid.UUID) (bool, error) 
 func (projectService *ProjectService) ListAllApprovedProjects() ([]*database.Project, error) {
 	var projects []*database.Project
 	// todo: for now filtering out unknown
-	err := databaseConnection.Where("type != ? AND approved = true", enum.Unknown).Find(&projects).Error
+	err := databaseConnection.Order("created_at desc").Where("type != ? AND approved = true", enum.Unknown).Find(&projects).Error
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (projectService *ProjectService) ListAllApprovedProjects() ([]*database.Pro
 func (projectService *ProjectService) ListAllProjects() ([]*database.Project, error) {
 	var projects []*database.Project
 	// todo: for now filtering out unknown
-	err := databaseConnection.Find(&projects).Error
+	err := databaseConnection.Order("created_at desc").Find(&projects).Error
 	if err != nil {
 		return nil, err
 	}

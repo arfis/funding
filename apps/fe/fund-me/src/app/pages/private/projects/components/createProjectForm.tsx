@@ -1,12 +1,12 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent, useContext } from 'react';
+import React, {useState, useEffect, ChangeEvent, FormEvent, useContext} from 'react';
 import {
     GetAllProjectsDocument,
     InvestmentType,
     Project,
-    useCreateProjectMutation,
+    useCreateProjectMutation, useDeleteProjectMutation,
     useUpdateProjectMutation
 } from '../../../../../generated/graphql';
-import { UserContext } from '../../dashboard/dashboard-page';
+import {UserContext} from '../../dashboard/dashboard-page';
 import {
     Container,
     TextField,
@@ -19,17 +19,23 @@ import {
     CircularProgress,
     Box,
     FormControl,
-    InputLabel
+    InputLabel,
+    Grid,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
+import {SelectChangeEvent} from '@mui/material/Select';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> = ({ project, onCancel }) => {
+const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> = ({project, onCancel}) => {
     const user = useContext(UserContext);
-    const [createProject, { loading: creating, error: createError }] = useCreateProjectMutation({
-        refetchQueries: [{ query: GetAllProjectsDocument }]
+    const [createProject, {loading: creating, error: createError}] = useCreateProjectMutation({
+        refetchQueries: [{query: GetAllProjectsDocument}]
     });
-    const [updateProject, { loading: updating, error: updateError }] = useUpdateProjectMutation({
-        refetchQueries: [{ query: GetAllProjectsDocument }]
+    const [updateProject, {loading: updating, error: updateError}] = useUpdateProjectMutation({
+        refetchQueries: [{query: GetAllProjectsDocument}]
+    });
+
+    const [deleteProject, {loading: deleting, error: deleteError}] = useDeleteProjectMutation({
+        refetchQueries: [{query: GetAllProjectsDocument}]
     });
 
     const [formState, setFormState] = useState({
@@ -42,7 +48,19 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
         endDate: '',
         approved: false,
         minInvestment: 1,
-        maxInvestment: 100
+        maxInvestment: 100,
+        dealDate: '',
+        tokenPrice: '',
+        vesting: '',
+        totalRaisingAmount: '',
+        syndicateRaisingAmount: '',
+        leadingInvestor: '',
+        category: '',
+        valuation: '',
+        tge: '',
+        claim: '',
+        overview: '',
+        longDescription: ''
     });
 
     useEffect(() => {
@@ -53,17 +71,29 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                 type: project.type,
                 imageUrl: project.imageUrl || '',
                 allocation: project.allocation,
-                startDate: formState.startDate ? new Date(formState.startDate).toISOString() : new Date().toISOString(),
-                endDate: formState.endDate ? new Date(formState.endDate).toISOString() : new Date().toISOString(),
+                startDate: project.startDate ? new Date(project.startDate).toISOString() : '',
+                endDate: project.endDate ? new Date(project.endDate).toISOString() : '',
                 approved: project.approved,
                 minInvestment: project.minInvestment,
-                maxInvestment: project.maxInvestment
+                maxInvestment: project.maxInvestment,
+                dealDate: project.dealDate ? new Date(project.dealDate).toISOString() : '',
+                tokenPrice: project.tokenPrice || '',
+                vesting: project.vesting || '',
+                totalRaisingAmount: project.totalRaisingAmount || '',
+                syndicateRaisingAmount: project.syndicateRaisingAmount || '',
+                leadingInvestor: project.leadingInvestor || '',
+                category: project.category || '',
+                valuation: project.valuation || '',
+                tge: project.tge || '',
+                claim: project.claim || '',
+                overview: project.overview || '',
+                longDescription: project.longDescription || ''
             });
         }
     }, [project]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target;
+        const {name, value, type} = e.target;
         setFormState(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
@@ -71,7 +101,7 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
     };
 
     const handleSelectChange = (e: SelectChangeEvent<string>) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormState(prev => ({
             ...prev,
             [name]: value as InvestmentType
@@ -83,11 +113,11 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
         try {
             if (project) {
                 await updateProject({
-                    variables: { id: project.id, input: { ...formState, allocation: Number(formState.allocation) } }
+                    variables: {id: project.id, input: {...formState, allocation: Number(formState.allocation)}}
                 });
             } else {
                 await createProject({
-                    variables: { ...formState, allocation: Number(formState.allocation) }
+                    variables: { input: {...formState, allocation: Number(formState.allocation)}}
                 });
             }
             onCancel();
@@ -100,7 +130,7 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
         <Container maxWidth="sm">
             <Box mt={3}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    {project ? "Edit Project" : "Create New Project"}
+                    {project ? 'Edit Project' : 'Create New Project'}
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -143,57 +173,197 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                         onChange={handleInputChange}
                         margin="normal"
                     />
-                    <TextField
-                        fullWidth
-                        label="Funding Allocation"
-                        name="allocation"
-                        type="number"
-                        value={formState.allocation}
-                        onChange={handleInputChange}
-                        margin="normal"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Minimal Investment"
-                        name="minInvestment"
-                        type="number"
-                        value={formState.minInvestment}
-                        onChange={handleInputChange}
-                        margin="normal"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Maximal Investment"
-                        name="maxInvestment"
-                        type="number"
-                        value={formState.maxInvestment}
-                        onChange={handleInputChange}
-                        margin="normal"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Start Date"
-                        name="startDate"
-                        type="datetime-local"
-                        value={formState.startDate}
-                        onChange={handleInputChange}
-                        margin="normal"
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="End Date"
-                        name="endDate"
-                        type="datetime-local"
-                        value={formState.endDate}
-                        onChange={handleInputChange}
-                        margin="normal"
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                    />
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Funding Allocation"
+                                name="allocation"
+                                type="number"
+                                value={formState.allocation}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Minimal Investment"
+                                name="minInvestment"
+                                type="number"
+                                value={formState.minInvestment}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Maximal Investment"
+                                name="maxInvestment"
+                                type="number"
+                                value={formState.maxInvestment}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Start Date"
+                                name="startDate"
+                                type="datetime-local"
+                                value={formState.startDate}
+                                onChange={handleInputChange}
+                                margin="normal"
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="End Date"
+                                name="endDate"
+                                type="datetime-local"
+                                value={formState.endDate}
+                                onChange={handleInputChange}
+                                margin="normal"
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Deal Date"
+                                name="dealDate"
+                                type="datetime-local"
+                                value={formState.dealDate}
+                                onChange={handleInputChange}
+                                margin="normal"
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Token Price"
+                                name="tokenPrice"
+                                value={formState.tokenPrice}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Vesting"
+                                name="vesting"
+                                value={formState.vesting}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Total Raising Amount"
+                                name="totalRaisingAmount"
+                                value={formState.totalRaisingAmount}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Syndicate Raising Amount"
+                                name="syndicateRaisingAmount"
+                                value={formState.syndicateRaisingAmount}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Leading Investor"
+                                name="leadingInvestor"
+                                value={formState.leadingInvestor}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Category"
+                                name="category"
+                                value={formState.category}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Valuation"
+                                name="valuation"
+                                value={formState.valuation}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="TGE"
+                                name="tge"
+                                value={formState.tge}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                label="Claim"
+                                name="claim"
+                                value={formState.claim}
+                                onChange={handleInputChange}
+                                margin="normal"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Overview"
+                                name="overview"
+                                value={formState.overview}
+                                onChange={handleInputChange}
+                                margin="normal"
+                                multiline
+                                rows={4}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Long Description"
+                                name="longDescription"
+                                value={formState.longDescription}
+                                onChange={handleInputChange}
+                                margin="normal"
+                                multiline
+                                rows={4}
+                            />
+                        </Grid>
+                    </Grid>
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -204,20 +374,33 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                         }
                         label="Approved"
                     />
-                    <Box mt={2} display="flex" justifyContent="space-between">
-                        <Button type="submit" variant="contained" color="primary" disabled={creating || updating}>
-                            {project ? "Update Project" : "Create Project"}
+                    <Box mt={2} display="flex" justifyContent="space-between" position="sticky" bottom={5}
+                         bgcolor="white">
+                        <Button type="submit" variant="contained" color="primary"
+                                disabled={creating || updating || deleting}>
+                            {project ? 'Update Project' : 'Create Project'}
                         </Button>
                         <Button variant="outlined" color="secondary" onClick={onCancel}>
                             Cancel
                         </Button>
+                        <Button variant="outlined" color="secondary" disabled={creating || updating || deleting}
+                                onClick={
+                                    async () => {
+                                        await deleteProject({variables: {id: project!.id}});
+                                        onCancel()
+                                    }
+                                }>
+                            <DeleteIcon/> Delete
+                        </Button>
                     </Box>
-                    {(creating || updating) && <CircularProgress />}
-                    {(createError || updateError) && <Typography color="error">Error: {createError?.message || updateError?.message}</Typography>}
+                    {(creating || updating) && <CircularProgress/>}
+                    {(createError || updateError) &&
+                        <Typography color="error">Error: {createError?.message || updateError?.message}</Typography>}
+                    {deleteError && <Typography color="error">Error: {deleteError?.message}</Typography>}
                 </form>
             </Box>
         </Container>
     );
-};
+}
 
 export default ProjectForm;

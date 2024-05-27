@@ -1,8 +1,6 @@
 query GetAllProjects {
     getAllProjects {
         id
-        hasPermissionToEdit
-        hasPermissionToInvest
         name
         type
         imageUrl
@@ -14,12 +12,21 @@ query GetAllProjects {
         approved
         maxInvestment
         minInvestment
+        dealDate
+        tokenPrice
+        tge
+        claim
+        overview
+        longDescription
         freeAllocation
+        hasPermissionToEdit
+        hasPermissionToInvest
         investments {
             id
             projectId
             userId
             amount
         }
+        createdAt
     }
 }

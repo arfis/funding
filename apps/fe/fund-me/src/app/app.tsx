@@ -45,14 +45,14 @@ export function App() {
         try {
             const decoded = jwtDecode<User>(token);
             console.log(decoded)
-            setUserDetails(decoded);
+            setUserDetails(decoded, token);
         } catch (e) {
             console.error('Invalid token', e);
         }
     }, []);
 
-    const setUserDetails = useCallback((decodedToken: User) => {
-        dispatch(setUser(decodedToken));
+    const setUserDetails = useCallback((decodedToken: User, token: string) => {
+        dispatch(setUser({...decodedToken, token}));
     }, []);
 
     return user ? (
