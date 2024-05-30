@@ -6,6 +6,7 @@ query GetProject($id: ID!) {
         imageUrl
         description
         allocation
+        ethAddress
         startDate
         endDate
         ownerId
@@ -27,6 +28,14 @@ query GetProject($id: ID!) {
         freeAllocation
         hasPermissionToEdit
         hasPermissionToInvest
+        invested {
+            createdAt
+            amount
+            precision
+            id
+            txHash
+            status
+        }
         investments {
             amount
         }

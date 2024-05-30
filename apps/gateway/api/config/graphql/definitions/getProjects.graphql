@@ -4,9 +4,11 @@ query GetAllProjects {
         name
         type
         imageUrl
+        ethAddress
         description
         allocation
         startDate
+        category
         endDate
         ownerId
         approved

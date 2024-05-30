@@ -12,5 +12,6 @@ mutation CreateProject($input: CreateProjectInput!) {
         approved
         maxInvestment
         minInvestment
+        minInvestmentPrecision
     }
 }

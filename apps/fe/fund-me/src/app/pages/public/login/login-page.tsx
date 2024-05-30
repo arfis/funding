@@ -23,7 +23,6 @@ const LoginPage = () => {
                 await provider.send("eth_requestAccounts", []);
                 const signer = await provider.getSigner();
                 const address = await signer.getAddress();
-                console.log("Connected address:", address);
                 return address;
             } catch (error) {
                 console.error("User rejected the request");
@@ -51,7 +50,6 @@ const LoginPage = () => {
                 body: JSON.stringify({ googleToken, walletAddress })
             });
             const data = await response.json();
-            console.log(data);
         }
     };
 

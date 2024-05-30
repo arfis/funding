@@ -6,6 +6,7 @@ import (
 	database "github.com/arfis/crowd-funding/gateway/internal/db"
 	"github.com/arfis/crowd-funding/gateway/internal/dbModels"
 	"github.com/arfis/crowd-funding/gateway/pkg/enum"
+	"github.com/arfis/crowd-funding/gateway/pkg/mathUtil"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"log"
@@ -20,6 +21,7 @@ var (
 	once           sync.Once
 	instanceOnce   sync.Once
 	projectService ProjectService
+	ethScan        EthScan
 )
 
 type InvestmentService struct {
@@ -53,13 +55,10 @@ func (s *InvestmentService) CreateInvestment(investment *dbModels.Investment) (*
 	// Then, save to database
 	projectLock := s.getProjectLock(investment.ProjectID)
 	projectLock.Lock()
-
-	// CREATED A SIMULATION
-	time.Sleep(time.Second * 1)
-
-	log.Printf("AFTER SLEEP")
+	log.Println("CREATING INVESTMENT")
 	defer projectLock.Unlock()
-	if _, err := checkAvailableInvestment(investment.ProjectID, int64(investment.Amount)); err != nil {
+	investmentAmount := mathUtil.ParseToFloat(int64(investment.Amount), investment.Precision)
+	if _, err := checkAvailableInvestment(investment.ProjectID, investmentAmount); err != nil {
 		return nil, err
 	}
 
@@ -85,20 +84,73 @@ func (s *InvestmentService) StartTicker(interval int32) {
 				select {
 				case <-ticker.C:
 					fmt.Println("Ticker ticked at", time.Now())
-					checkAndSoftDeleteInvestments()
+					checkInvestmentStatus()
+					softDeleteNonTransactionalInvestments()
 				}
 			}
 		}()
 	})
 }
 
-func checkAndSoftDeleteInvestments() {
+func checkInvestmentStatus() {
+	log.Println("CHECK INVESTMENt STATUS")
+	var investments []dbModels.Investment
+	var database = database.GetConnection()
+	// Fetch all investments with pending status
+	result := database.Where("status IN ?", []string{"pending", ""}).Find(&investments)
+	if result.Error != nil {
+		log.Println("failed to fetch investments:", result.Error)
+		return
+	}
+
+	for _, investment := range investments {
+		txStatus, err := ethScan.GetTxStatus(investment.TxHash)
+		if err != nil {
+			log.Println("failed to get transaction status for", investment.TxHash, ":", err)
+			continue
+		}
+
+		// Update the investment status based on the transaction status
+		if txStatus == "success" {
+			investment.Status = "approved"
+		} else if txStatus == "fail" {
+			investment.Status = "failed"
+		}
+
+		// Save the updated investment status to the database
+		err = database.Save(&investment).Error
+		if err != nil {
+			log.Println("failed to update investment status:", err)
+		}
+	}
+}
+
+func (s *InvestmentService) GetInvestmentByID(id uuid.UUID) (*dbModels.Investment, error) {
+	log.Printf("GETTING INVESTMENT BY ID %s", id)
+	var investment dbModels.Investment
+	if err := s.db.First(&investment, "id = ?", id).Error; err != nil {
+		log.Printf("failed to find investment with id %s: %v", id, err)
+		return nil, err
+	}
+	log.Println("GOT INVESTMENT?!")
+	return &investment, nil
+}
+
+func (s *InvestmentService) UpdateInvestment(investment *dbModels.Investment) (*dbModels.Investment, error) {
+	log.Println("UPDATING INVESTMENT 3")
+	if err := s.db.Save(investment).Error; err != nil {
+		return nil, err
+	}
+	return investment, nil
+}
+
+func softDeleteNonTransactionalInvestments() {
 	db := database.GetConnection()
 	fmt.Printf("CHECKING")
 	now := time.Now()
 	var investments []dbModels.Investment
 
-	result := db.Where("locked_until < ? AND approved = ? AND deleted_at is null", now, false).Find(&investments)
+	result := db.Where("locked_until < ? AND tx_hash is null AND deleted_at is null", now).Find(&investments)
 	if result.Error != nil {
 		fmt.Println("Error fetching investments:", result.Error)
 		return
@@ -124,7 +176,7 @@ func calculateInvestmentLock(investment *dbModels.Investment) (*dbModels.Investm
 			fmt.Printf("Locked Until: %d", minutesEnv)
 			if minutesEnv == "" {
 				fmt.Println("INVESTMENT_LOCK_MINUTES not set, defaulting to 10 minutes")
-				minutesEnv = "10" // Default value if not set
+				minutesEnv = "1" // Default value if not set
 			}
 
 			minutes, err := strconv.Atoi(minutesEnv)
@@ -148,7 +200,7 @@ func calculateInvestmentLock(investment *dbModels.Investment) (*dbModels.Investm
 	return investment, nil
 }
 
-func checkAvailableInvestment(projectId uuid.UUID, investment int64) (bool, error) {
+func checkAvailableInvestment(projectId uuid.UUID, investment float64) (bool, error) {
 	freeAllocation, err := GetAvailableAllocation(projectId)
 	if err != nil {
 		return false, err

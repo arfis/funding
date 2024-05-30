@@ -1,0 +1,6 @@
+mutation UpdateInvestmentStatus($investmentId: ID!, $status: String!, $txHash: String!) {
+    updateInvestmentStatus(investmentId: $investmentId, status: $status, txHash: $txHash) {
+        id
+        amount
+    }
+}

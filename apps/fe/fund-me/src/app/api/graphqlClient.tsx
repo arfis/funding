@@ -8,11 +8,9 @@ const httpLink = new HttpLink({ uri: 'http://localhost:5002/graphql' });
 
 
 const authLink = new ApolloLink((operation, forward) => {
-    console.log("AUTH LINK")
     // Retrieve the authentication token from local storage if it exists
     const token = getCookie('AuthToken');
 
-    console.log('TOKEN IS ', token)
     // Use the setContext method to set the HTTP headers.
     operation.setContext({
         headers: {

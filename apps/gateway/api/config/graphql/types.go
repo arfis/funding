@@ -15,16 +15,78 @@ var allocationService service.Allocation
 var updateProjectInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "UpdateProjectInput",
 	Fields: graphql.InputObjectConfigFieldMap{
-		"name":          &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"description":   &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"type":          &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"imageUrl":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"allocation":    &graphql.InputObjectFieldConfig{Type: graphql.Int},
-		"startDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"endDate":       &graphql.InputObjectFieldConfig{Type: graphql.String},
-		"minInvestment": &graphql.InputObjectFieldConfig{Type: graphql.Int},
-		"maxInvestment": &graphql.InputObjectFieldConfig{Type: graphql.Int},
-		"approved":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+		"name": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"description": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"type": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"imageUrl": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"allocation": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"startDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"endDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"minInvestment": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
+		"minInvestmentPrecision": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
+		"maxInvestment": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
+		"approved": &graphql.InputObjectFieldConfig{
+			Type: graphql.Boolean,
+		},
+		"dealDate": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"tokenPrice": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"vesting": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"totalRaisingAmount": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"syndicateRaisingAmount": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"leadingInvestor": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"category": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"valuation": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"tge": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"claim": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"overview": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"longDescription": &graphql.InputObjectFieldConfig{
+			Type: graphql.String,
+		},
+		"ethAddress": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
 	},
 })
 
@@ -48,6 +110,9 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 				log.Printf("GETTING TYPE %v", project.Type)
 				return project.Type.String(), nil
 			},
+		},
+		"ethAddress": &graphql.Field{
+			Type: graphql.String,
 		},
 		"imageUrl": &graphql.Field{
 			Type: graphql.String,
@@ -74,6 +139,9 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.NewNonNull(graphql.Int),
 		},
 		"minInvestment": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"minInvestmentPrecision": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
 		},
 		"dealDate": &graphql.Field{
@@ -125,6 +193,17 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 				return allocationService.GetInvestmentsByProjectID(project.ID)
 			},
 		},
+		"invested": &graphql.Field{
+			Type: graphql.NewList(investmentType),
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				project, ok := params.Source.(*dbModels.Project)
+				userDetail, ok := params.Context.Value("userDetail").(*authorization.JwtTokenContent)
+				if !ok {
+					return nil, fmt.Errorf("user not found")
+				}
+				return allocationService.GetInvestmentsByProjectIDAndUser(project.ID, userDetail.UserID)
+			},
+		},
 		"hasPermissionToInvest": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Boolean),
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
@@ -150,7 +229,7 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 			},
 		},
 		"freeAllocation": &graphql.Field{
-			Type: graphql.Int,
+			Type: graphql.Float,
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				project, ok := params.Source.(*dbModels.Project)
 				if !ok {
@@ -174,8 +253,23 @@ var investmentType = graphql.NewObject(graphql.ObjectConfig{
 		"userId": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.ID),
 		},
+		"createdAt": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.DateTime),
+		},
 		"amount": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"precision": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"txHash": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"ethAddress": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"status": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.String),
 		},
 	},
 })
@@ -222,6 +316,9 @@ var createProjectInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 		"minInvestment": &graphql.InputObjectFieldConfig{
 			Type: graphql.Int,
 		},
+		"minInvestmentPrecision": &graphql.InputObjectFieldConfig{
+			Type: graphql.Int,
+		},
 		"maxInvestment": &graphql.InputObjectFieldConfig{
 			Type: graphql.Int,
 		},
@@ -263,6 +360,9 @@ var createProjectInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 		},
 		"longDescription": &graphql.InputObjectFieldConfig{
 			Type: graphql.String,
+		},
+		"ethAddress": &graphql.InputObjectFieldConfig{
+			Type: graphql.NewNonNull(graphql.String),
 		},
 	},
 })

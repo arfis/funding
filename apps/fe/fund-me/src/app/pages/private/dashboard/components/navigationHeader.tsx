@@ -3,13 +3,14 @@ import styled from 'styled-components';
 import {AppBar, Toolbar, IconButton, Button, Menu, MenuItem} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {Link, LinkProps, NavLink} from 'react-router-dom';
-import {ethers} from 'ethers';
+import { ethers } from "ethers";
 import Web3Modal from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
+import Fortmatic from 'fortmatic';
+import {useEthereumAddress} from '../../hooks/useEthereumAddress';
 
 const Header = styled(AppBar)`
     background-color: #fff;
-    box-shadow: none;
     border-bottom: 1px solid #e0e0e0;
 `;
 
@@ -76,8 +77,8 @@ const ConnectButton = styled.button`
 
 const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, userName, avatarUrl}) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [walletAddress, setWalletAddress] = useState<string>("");
     const [balance, setBalance] = useState<string>("");
+    const walletAddress = useEthereumAddress();
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -87,48 +88,35 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, use
         setAnchorEl(null);
     };
 
-    const providerOptions = {
-        walletconnect: {
-            package: WalletConnectProvider,
-            options: {
-                infuraId: "YOUR_INFURA_ID", // Required
-            },
-        },
-        // Add more wallet providers here
-    };
-
-    const web3Modal = new Web3Modal({
-        cacheProvider: true, // optional
-        providerOptions, // required
-    });
-
     const connectWallet = async () => {
-        console.log('trying to connect')
-        if (typeof (window as any).ethereum !== 'undefined') {
+        if (window.ethereum) {
             try {
-                const provider = new ethers.BrowserProvider((window as any).ethereum);
-                await provider.send("eth_requestAccounts", []);
-                const signer = await provider.getSigner();
-                const address = await signer.getAddress();
-                console.log('ADDREESS ', address)
-                setWalletAddress(address);
-
-                const balance = await provider.getBalance(address);
-                setBalance(ethers.formatEther(balance));
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
             } catch (error) {
-                console.error("User rejected the request");
+                console.error('User rejected the request');
             }
         } else {
-            console.error("MetaMask not found");
+            alert('Install MetaMask extension!!');
+        }
+    };
+
+    const getBalance = async (address: string) => {
+        try {
+            const balance = await window.ethereum.request({
+                method: 'eth_getBalance',
+                params: [address, 'latest'],
+            });
+            setBalance(ethers.formatEther(balance));
+        } catch (error) {
+            console.error('Error getting balance:', error);
         }
     };
 
     useEffect(() => {
-        console.log((window as any).ethereum)
-        if (web3Modal.cachedProvider) {
-            connectWallet();
+        if (walletAddress) {
+            getBalance(walletAddress);
         }
-    });
+    }, [walletAddress]);
 
     return (
         <Header position="static">

@@ -18,54 +18,19 @@ var (
 	quizService    service.QuizService
 )
 
+var investmentService = service.NewInvestmentService(database.GetConnection())
+
 var GetRootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
 	Fields: graphql.Fields{
-		"createProject": createProjectMutation,
-		"updateProject": updateProjectMutation,
-		"deleteProject": deleteProjectMutation,
-		"createInvestment": &graphql.Field{
-			Type: investmentType,
-			Args: graphql.FieldConfigArgument{
-				"projectId": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.ID),
-				},
-				"amount": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.Int),
-				},
-			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-				userDetail, ok := params.Context.Value("userDetail").(*authorization.JwtTokenContent)
-				if !ok {
-					log.Println("UserID not found or is not of type uuid.UUID")
-					return nil, fmt.Errorf("user not found")
-				}
-				projectId, _ := uuid.Parse(params.Args["projectId"].(string))
-				amount := params.Args["amount"].(int)
-				project, err := projectService.GetProjectByID(projectId)
-				if err != nil {
-					return nil, fmt.Errorf("project not found")
-				}
-				if !project.Approved {
-					return nil, fmt.Errorf("project not approved for investments")
-				}
-				userInvestment := dbModels.Investment{
-					ID:        uuid.New(),
-					ProjectID: projectId,
-					UserID:    userDetail.UserID,
-					Amount:    amount,
-				}
-				investmentService := service.NewInvestmentService(database.GetConnection())
-				createdInvestment, err := investmentService.CreateInvestment(&userInvestment)
-				if err != nil {
-					return nil, fmt.Errorf(err.Error())
-				}
-				return createdInvestment, nil
-			},
-		},
-		"createQuiz":       createQuizMutation,
-		"submitQuizAnswer": submitQuizAnswerMutation,
-		"updateQuiz":       updateQuizMutation,
+		"createProject":          createProjectMutation,
+		"updateProject":          updateProjectMutation,
+		"deleteProject":          deleteProjectMutation,
+		"updateInvestmentStatus": updateInvestmentStatusMutation,
+		"createInvestment":       createInvestmentMutation,
+		"createQuiz":             createQuizMutation,
+		"submitQuizAnswer":       submitQuizAnswerMutation,
+		"updateQuiz":             updateQuizMutation,
 	},
 })
 
@@ -130,6 +95,8 @@ var createProjectMutation = &graphql.Field{
 			Claim:                  input["claim"].(string),
 			Overview:               input["overview"].(string),
 			LongDescription:        input["longDescription"].(string),
+			EthAddress:             input["ethAddress"].(string),
+			MinInvestmentPrecision: input["minInvestmentPrecision"].(int),
 		}
 
 		createdProject, err := projectService.CreateProject(&project)
@@ -246,6 +213,115 @@ var deleteProjectMutation = &graphql.Field{
 		}
 
 		return project, nil
+	},
+}
+
+var updateInvestmentStatusMutation = &graphql.Field{
+	Type: investmentType,
+	Args: graphql.FieldConfigArgument{
+		"investmentId": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.ID),
+		},
+		"status": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"txHash": &graphql.ArgumentConfig{
+			Type: graphql.String,
+		},
+	},
+	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+		log.Println("UPDATING INVESTMENT ")
+		investmentIdString, _ := params.Args["investmentId"].(string)
+		status := params.Args["status"].(string)
+		txHash := params.Args["txHash"].(string)
+		log.Println("UPDATING INVESTMENT 0")
+		investmentId := uuid.MustParse(investmentIdString)
+		log.Println("UPDATING INVESTMENT -1")
+		log.Printf("InvestmentID: %s", investmentId)
+		investment, err := investmentService.GetInvestmentByID(investmentId)
+		log.Printf("GOT INVESTMENT: %s", investmentId)
+		if err != nil {
+			return nil, fmt.Errorf("investment not found")
+		}
+		log.Println("UPDATING INVESTMENT 2")
+		investment.Status = status
+		if txHash != "" {
+			investment.TxHash = txHash
+		}
+
+		updatedInvestment, err := investmentService.UpdateInvestment(investment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update investment status")
+		}
+
+		return updatedInvestment, nil
+	},
+}
+
+var createInvestmentMutation = &graphql.Field{
+	Type: investmentType,
+	Args: graphql.FieldConfigArgument{
+		"status": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"txHash": &graphql.ArgumentConfig{
+			Type: graphql.String,
+		},
+		"projectId": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.ID),
+		},
+		"amount": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.Int),
+		},
+		"ethAddress": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+		"precision": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.Int), // Add precision argument
+		},
+	},
+	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+		userDetail, ok := params.Context.Value("userDetail").(*authorization.JwtTokenContent)
+		if !ok {
+			log.Println("UserID not found or is not of type uuid.UUID")
+			return nil, fmt.Errorf("user not found")
+		}
+		projectId, _ := uuid.Parse(params.Args["projectId"].(string))
+		ethAddress, _ := params.Args["ethAddress"].(string)
+
+		if ethAddress == "" {
+			return nil, fmt.Errorf("no eth address")
+		}
+
+		amount := params.Args["amount"].(int)
+		precision := params.Args["precision"].(int)
+		project, err := projectService.GetProjectByID(projectId)
+		if err != nil {
+			return nil, fmt.Errorf("project not found")
+		}
+		if !project.Approved {
+			return nil, fmt.Errorf("project not approved for investments")
+		}
+
+		status := params.Args["status"].(string)
+		txHash := params.Args["txHash"].(string)
+
+		userInvestment := dbModels.Investment{
+			ID:         uuid.New(),
+			ProjectID:  projectId,
+			UserID:     userDetail.UserID,
+			Amount:     amount,
+			EthAddress: ethAddress,
+			Precision:  precision,
+			Status:     status,
+			TxHash:     txHash,
+		}
+		investmentService := service.NewInvestmentService(database.GetConnection())
+		createdInvestment, err := investmentService.CreateInvestment(&userInvestment)
+		if err != nil {
+			return nil, fmt.Errorf(err.Error())
+		}
+		return createdInvestment, nil
 	},
 }
 

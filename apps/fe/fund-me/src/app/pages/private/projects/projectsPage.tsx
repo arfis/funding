@@ -5,7 +5,8 @@ import ProjectForm from './components/createProjectForm';
 import DockedLayout from '../components/DockeredLayout';
 import ProjectTile from './components/projectTile';
 import styled from 'styled-components';
-import {Button} from '@mui/material';
+import {HEADER_HEIGHT} from '../../../constants';
+import FloatingButton from '../components/FloatingButton';
 
 const ProjectList = styled.div`
     width: 100%;
@@ -13,6 +14,10 @@ const ProjectList = styled.div`
     flex-wrap: wrap;
     background-color: #ffffff;
 `;
+
+const FullScreenWindow = styled.div`
+    max-height: calc(100vh - ${HEADER_HEIGHT});
+`
 
 const ProjectsPage = () => {
     const user = useContext(UserContext);
@@ -28,33 +33,38 @@ const ProjectsPage = () => {
 
     if (data!.getAllProjects!.length > 0) {
         return (
-            <div>
-                <Button variant="contained" color="primary" onClick={() => setCreateNewProject(true)}>
-                    Create new
-                </Button>
-                <DockedLayout
-                    dockedContent={ (projectToEdit || createNewProject) && (
-                        <ProjectForm project={projectToEdit} onCancel={() => {
-                            setCreateNewProject(true)
-                            setProjectToEdit(null)
-                        }}/>
-                    )}
-                    listContent={
-                        <ProjectList>
-                            {data && !!data.getAllProjects && data.getAllProjects.map(project =>
-                                project ? (
-                                    <ProjectTile
-                                        key={project.id}
-                                        project={project}
-                                        editClick={() => setProjectToEdit(project)}
-                                        investClick={() => investIntoProject(project.id)}
-                                    />
-                                ) : null
-                            )}
-                        </ProjectList>
-                    }
-                />
-            </div>
+                <>
+                    <DockedLayout
+                        showDockedFullScreen={createNewProject}
+                        showDocked={projectToEdit}
+                        addButton={
+                            <FloatingButton onClick={() => setCreateNewProject(true)}></FloatingButton>
+                        }
+                        dockedContent={
+                            <ProjectForm project={projectToEdit}
+                                         onCancel={() => {
+                                setCreateNewProject(false)
+                                setProjectToEdit(null)
+                            }}/>
+                        }
+                        listContent={
+                            <FullScreenWindow>
+                                <ProjectList>
+                                    {data && !!data.getAllProjects && data.getAllProjects.map(project =>
+                                        project ? (
+                                            <ProjectTile
+                                                key={project.id}
+                                                project={project}
+                                                editClick={() => setProjectToEdit(project)}
+                                                investClick={() => investIntoProject(project.id)}
+                                            />
+                                        ) : null
+                                    )}
+                                </ProjectList>
+                            </FullScreenWindow>
+                        }
+                    />
+                </>
         );
     } else {
         <div>There are currently no projects available</div>

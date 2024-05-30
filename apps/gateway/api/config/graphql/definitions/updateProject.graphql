@@ -12,5 +12,6 @@ mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
         approved
         maxInvestment
         minInvestment
+        minInvestmentPrecision
     }
 }

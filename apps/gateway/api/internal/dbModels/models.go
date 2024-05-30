@@ -15,6 +15,7 @@ type Project struct {
 	Description            string              `json:"description" gorm:"type:text"`
 	Allocation             int                 `json:"allocation" gorm:"not null;type:int"`
 	MinInvestment          int                 `json:"minInvestment" gorm:"type:int"`
+	MinInvestmentPrecision int                 `json:"minInvestmentPrecision" gorm:"type:int;default:0"`
 	MaxInvestment          int                 `json:"maxInvestment" gorm:"type:int"`
 	OwnerId                *uuid.UUID          `json:"ownerId" gorm:"type:uuid;not null;index"`
 	Approved               bool                `json:"approved" gorm:"type:boolean;default:false"`
@@ -34,17 +35,23 @@ type Project struct {
 	Claim                  string              `json:"claim" gorm:"type:text"`
 	Overview               string              `json:"overview" gorm:"type:text"`
 	LongDescription        string              `json:"longDescription" gorm:"type:text"`
+	EthAddress             string              `json:"ethAddress" gorm:"type:varchar(100)"`
 }
 
 type Investment struct {
 	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;"`
 	ProjectID   uuid.UUID      `json:"projectId" gorm:"type:uuid;not null;index"` // Indexed for performance
 	UserID      uuid.UUID      `json:"userId" gorm:"type:uuid;not null;index"`    // Indexed for performance
-	Amount      int            `json:"amount" gorm:"not null;type:int"`           // Precision for financial data
+	Amount      int            `json:"amount" gorm:"not null;type:int"`
+	Precision   int            `json:"precision" gorm:"not null;default:0"`
 	Approved    bool           `json:"approved" gorm:"type: boolean;default:false"`
 	LockedUntil *time.Time     `json:"lockedUntil" gorm:"type:timestamp"`
 	Project     Project        `json:"project" gorm:"foreignKey:ProjectID;constraint:OnDelete:CASCADE;"` // Navigation property
 	DeletedAt   gorm.DeletedAt `gorm:"index"`                                                            // This enables soft deletes
+	CreatedAt   time.Time      `json:"createdAt" gorm:"autoCreateTime"`
+	EthAddress  string         `json:"ethAddress" gorm:"type:varchar(100)"`
+	Status      string         `json:"status" gorm:"type:varchar(20)"`
+	TxHash      string         `json:"txHash" gorm:"type:varchar(66)"`
 }
 
 func (base *Project) BeforeCreate(tx *gorm.DB) (err error) {

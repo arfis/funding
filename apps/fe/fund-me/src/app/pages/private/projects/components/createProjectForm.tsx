@@ -1,41 +1,43 @@
-import React, {useState, useEffect, ChangeEvent, FormEvent, useContext} from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import {
     GetAllProjectsDocument,
     InvestmentType,
     Project,
-    useCreateProjectMutation, useDeleteProjectMutation,
+    useCreateProjectMutation,
+    useDeleteProjectMutation,
     useUpdateProjectMutation
 } from '../../../../../generated/graphql';
-import {UserContext} from '../../dashboard/dashboard-page';
 import {
-    Container,
-    TextField,
-    Select,
-    MenuItem,
+    Box,
     Button,
     Checkbox,
-    FormControlLabel,
-    Typography,
     CircularProgress,
-    Box,
+    Container,
     FormControl,
-    InputLabel,
+    FormControlLabel,
     Grid,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+    Typography,
 } from '@mui/material';
-import {SelectChangeEvent} from '@mui/material/Select';
+import { SelectChangeEvent } from '@mui/material/Select';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useEthereumAddress } from '../../hooks/useEthereumAddress';
+import {calculatePrecision} from '../../util';
 
-const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> = ({project, onCancel}) => {
-    const user = useContext(UserContext);
-    const [createProject, {loading: creating, error: createError}] = useCreateProjectMutation({
-        refetchQueries: [{query: GetAllProjectsDocument}]
+const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> = ({ project, onCancel }) => {
+    const walletAddress = useEthereumAddress();
+    const [createProject, { loading: creating, error: createError }] = useCreateProjectMutation({
+        refetchQueries: [{ query: GetAllProjectsDocument }]
     });
-    const [updateProject, {loading: updating, error: updateError}] = useUpdateProjectMutation({
-        refetchQueries: [{query: GetAllProjectsDocument}]
+    const [updateProject, { loading: updating, error: updateError }] = useUpdateProjectMutation({
+        refetchQueries: [{ query: GetAllProjectsDocument }]
     });
 
-    const [deleteProject, {loading: deleting, error: deleteError}] = useDeleteProjectMutation({
-        refetchQueries: [{query: GetAllProjectsDocument}]
+    const [deleteProject, { loading: deleting, error: deleteError }] = useDeleteProjectMutation({
+        refetchQueries: [{ query: GetAllProjectsDocument }]
     });
 
     const [formState, setFormState] = useState({
@@ -48,6 +50,7 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
         endDate: '',
         approved: false,
         minInvestment: 1,
+        minInvestmentPrecision: 0,
         maxInvestment: 100,
         dealDate: '',
         tokenPrice: '',
@@ -60,7 +63,8 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
         tge: '',
         claim: '',
         overview: '',
-        longDescription: ''
+        longDescription: '',
+        ethAddress: walletAddress
     });
 
     useEffect(() => {
@@ -75,6 +79,7 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                 endDate: project.endDate ? new Date(project.endDate).toISOString() : '',
                 approved: project.approved,
                 minInvestment: project.minInvestment,
+                minInvestmentPrecision: 0, // Default precision, update this if necessary
                 maxInvestment: project.maxInvestment,
                 dealDate: project.dealDate ? new Date(project.dealDate).toISOString() : '',
                 tokenPrice: project.tokenPrice || '',
@@ -87,13 +92,21 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                 tge: project.tge || '',
                 claim: project.claim || '',
                 overview: project.overview || '',
-                longDescription: project.longDescription || ''
+                longDescription: project.longDescription || '',
+                ethAddress: walletAddress
             });
+        } else {
+            setFormState({
+                ...formState,
+                ethAddress: walletAddress
+            })
         }
-    }, [project]);
+    }, [project, walletAddress]);
+
+
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const {name, value, type} = e.target;
+        const { name, value, type } = e.target;
         setFormState(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
@@ -101,7 +114,7 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
     };
 
     const handleSelectChange = (e: SelectChangeEvent<string>) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
         setFormState(prev => ({
             ...prev,
             [name]: value as InvestmentType
@@ -110,14 +123,36 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        const { amount, precision } = calculatePrecision(parseFloat(formState.minInvestment.toString()));
+
+        if (amount >= formState.allocation || amount >= formState.maxInvestment) {
+            alert("Minimal investment must be less than allocation and maximal investment.");
+            return;
+        }
+
         try {
             if (project) {
                 await updateProject({
-                    variables: {id: project.id, input: {...formState, allocation: Number(formState.allocation)}}
+                    variables: {
+                        id: project.id,
+                        input: {
+                            ...formState,
+                            minInvestment: amount,
+                            minInvestmentPrecision: precision,
+                            allocation: Number(formState.allocation)
+                        }
+                    }
                 });
             } else {
                 await createProject({
-                    variables: { input: {...formState, allocation: Number(formState.allocation)}}
+                    variables: {
+                        input: {
+                            ...formState,
+                            minInvestment: amount,
+                            minInvestmentPrecision: precision,
+                            allocation: Number(formState.allocation)
+                        }
+                    }
                 });
             }
             onCancel();
@@ -194,6 +229,13 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                                 value={formState.minInvestment}
                                 onChange={handleInputChange}
                                 margin="normal"
+                                InputProps={{
+                                    inputProps: {
+                                        step: "0.001"
+                                    }
+                                }}
+                                helperText={formState.minInvestment >= formState.allocation || formState.minInvestment >= formState.maxInvestment ? "Minimal investment must be less than allocation and maximal investment." : ""}
+                                error={formState.minInvestment >= formState.allocation || formState.minInvestment >= formState.maxInvestment}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -364,6 +406,19 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                             />
                         </Grid>
                     </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Ethereum Address"
+                            name="ethAddress"
+                            value={formState.ethAddress}
+                            onChange={handleInputChange}
+                            margin="normal"
+                            required
+                            helperText={formState.ethAddress !== walletAddress ? 'This is not the currently connected wallet address.' : ''}
+                            error={formState.ethAddress !== walletAddress}
+                        />
+                    </Grid>
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -374,26 +429,26 @@ const ProjectForm: React.FC<{ project: Project | null, onCancel: () => void }> =
                         }
                         label="Approved"
                     />
-                    <Box mt={2} display="flex" justifyContent="space-between" position="sticky" bottom={5}
+                    <Box mt={2} display="flex" columnGap="10px" position="sticky" bottom={20}
                          bgcolor="white">
                         <Button type="submit" variant="contained" color="primary"
                                 disabled={creating || updating || deleting}>
                             {project ? 'Update Project' : 'Create Project'}
                         </Button>
-                        <Button variant="outlined" color="secondary" onClick={onCancel}>
+                        <Button variant="outlined" color="primary" onClick={onCancel}>
                             Cancel
                         </Button>
-                        <Button variant="outlined" color="secondary" disabled={creating || updating || deleting}
+                        <Button variant="outlined" color="error" disabled={creating || updating || deleting}
                                 onClick={
                                     async () => {
-                                        await deleteProject({variables: {id: project!.id}});
+                                        await deleteProject({ variables: { id: project!.id } });
                                         onCancel()
                                     }
                                 }>
-                            <DeleteIcon/> Delete
+                            <DeleteIcon /> Delete
                         </Button>
                     </Box>
-                    {(creating || updating) && <CircularProgress/>}
+                    {(creating || updating) && <CircularProgress />}
                     {(createError || updateError) &&
                         <Typography color="error">Error: {createError?.message || updateError?.message}</Typography>}
                     {deleteError && <Typography color="error">Error: {deleteError?.message}</Typography>}

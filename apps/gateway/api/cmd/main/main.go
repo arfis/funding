@@ -23,5 +23,5 @@ func main() {
 }
 
 func startTicker(ticker tickerUtil.Ticker) {
-	ticker.StartTicker(120)
+	ticker.StartTicker(20)
 }
