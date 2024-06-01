@@ -8,7 +8,10 @@ import Web3Modal from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import Fortmatic from 'fortmatic';
 import {useEthereumAddress} from '../../hooks/useEthereumAddress';
-
+import {theme} from '../../../../theme';
+import {HEADER_HEIGHT} from '../../../../constants';
+import PaidIcon from '@mui/icons-material/Paid';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 const Header = styled(AppBar)`
     background-color: #fff;
     border-bottom: 1px solid #e0e0e0;
@@ -23,21 +26,35 @@ const MenuContainer = styled.div`
     display: flex;
     align-items: center;
     flex-grow: 1;
+    height: ${HEADER_HEIGHT};
 `;
+
+const NonDecoratedLink = styled(Link)`
+    text-decoration: none;
+    color: black;
+`
 
 const MenuItemLink = styled(NavLink)`
     color: #333;
-    //font-weight: 600;
-    margin: 0 10px;
+    display: flex;
+    height: 100%;
+    padding: 0 10px;
     text-transform: none;
+    cursor: pointer;
     text-decoration: none;
-
+    align-items: center;
+    background-color: inherit;
+    transition: background-color .15s ease-in;
+    
     &.active {
-        text-decoration: underline;
+        height: calc(${HEADER_HEIGHT} - 3px);
+        color: ${theme.palette.primary.contrastText};
+        border-bottom: 3px solid ${theme.palette.secondary.dark};
     }
 
     &:hover {
-        color: #8a8686;
+        //border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0.04)
     }
 `;
 
@@ -45,18 +62,23 @@ const UserDetailButton = styled(Button)`
     margin-left: auto;
     color: #333;
     text-transform: none;
+    height: 100%;
 `;
 
-const LanguageButton = styled(Button)`
-    border: 1px solid #333;
-    margin-right: 20px;
-    text-transform: none;
+const WalletItem = styled.div`
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    padding: 0 5px;
+    margin: 2px;
+    color: inherit;
 `;
 
 const WalletInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 12px;
 `;
 
 interface NavigationHeaderProps {
@@ -129,22 +151,28 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({links, onLogout, use
                         </MenuItemLink>
                     ))}
                 </MenuContainer>
-                <LanguageButton>EN</LanguageButton>
                 {walletAddress && balance ? (
                     <WalletInfo>
-                        <div>Wallet: {walletAddress}</div>
-                        <div>Balance: {balance} ETH</div>
+                        <WalletItem>
+                            <AccountBalanceWalletIcon/>
+                            {walletAddress}
+                        </WalletItem>
+                        <WalletItem>
+                            <PaidIcon/>
+                            {balance} ETH
+                        </WalletItem>
+
                     </WalletInfo>
                 ) : (
                     <ConnectButton onClick={connectWallet}>Connect Wallet</ConnectButton>
                 )}
-                <UserDetailButton  color="inherit" onClick={handleMenu}>
+                <UserDetailButton color="inherit" onClick={handleMenu}>
                     <img src={avatarUrl} alt="User Avatar"
                          style={{marginRight: '8px', height: '30px', borderRadius: '50%'}}/>
                     {userName}
                 </UserDetailButton>
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-                    <MenuItemLink to={"profile"}>Profile</MenuItemLink>
+                    <MenuItem><NonDecoratedLink to={"profile"}>Profile</NonDecoratedLink></MenuItem>
                     <MenuItem onClick={() => onLogout()}>Logout</MenuItem>
                 </Menu>
             </Toolbar>

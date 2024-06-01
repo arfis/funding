@@ -28,7 +28,7 @@ func (ethScan *EthScan) GetTxStatus(txHash string) (string, error) {
 		return "", fmt.Errorf("No tx hash")
 	}
 	// Use Sepolia endpoint to get transaction status
-	url := fmt.Sprintf("https://api-sepolia.etherscan.io/api?module=transaction&txhash=%s&apikey=%s", txHash, apiKey)
+	url := fmt.Sprintf("https://api-sepolia.etherscan.io/api?module=transaction&action=gettxreceiptstatus&txhash=%s&apikey=%s", txHash, apiKey)
 	resp, err := http.Get(url)
 	log.Printf("The url is %s", url)
 	if err != nil {

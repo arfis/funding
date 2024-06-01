@@ -5,6 +5,7 @@ import {HEADER_HEIGHT} from '../../../constants';
 const Content = styled.div`
     display: flex;
     flex-direction: row;
+    //padding: 0 10%;
     //padding-top: 20px;
 `;
 
@@ -37,11 +38,12 @@ const FullscreenDocked = styled.div`
 `;
 
 const DockedContent = styled.div`
-    position: relative;
-    top: 10px;
+    position: sticky;
+    top: 0;
+    display: block;
     overflow-y: auto;
     height: 100%;
-    width: 800px;
+    width: 1500px;
     padding-bottom: 10px;
     max-height: calc(100vh - ${HEADER_HEIGHT});
 `;

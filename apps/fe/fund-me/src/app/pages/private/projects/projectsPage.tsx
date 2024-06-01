@@ -12,7 +12,14 @@ const ProjectList = styled.div`
     width: 100%;
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     background-color: #ffffff;
+    
+    
+    .scaled {
+        transform: scale(0.8);
+        transition: transform 0.3s ease-in-out;
+    }
 `;
 
 const FullScreenWindow = styled.div`
@@ -52,12 +59,12 @@ const ProjectsPage = () => {
                                 <ProjectList>
                                     {data && !!data.getAllProjects && data.getAllProjects.map(project =>
                                         project ? (
-                                            <ProjectTile
-                                                key={project.id}
-                                                project={project}
-                                                editClick={() => setProjectToEdit(project)}
-                                                investClick={() => investIntoProject(project.id)}
-                                            />
+                                                <ProjectTile
+                                                    key={project.id}
+                                                    project={project}
+                                                    editClick={() => setProjectToEdit(project)}
+                                                    investClick={() => investIntoProject(project.id)}
+                                                />
                                         ) : null
                                     )}
                                 </ProjectList>

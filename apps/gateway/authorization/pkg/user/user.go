@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	database "github.com/arfis/crowd-funding/authorization/internal/db"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -33,6 +34,16 @@ func CreateUser(user *database.User) (*database.User, error) {
 func FindUserByExternalId(externalId string) *database.User {
 	var user database.User
 	result := database.GetConnection().Where("external_id = ? AND deleted_at IS NULL", externalId).First(&user)
+	if result.Error != nil {
+		return nil // User not found
+		// Handle other potential errors, maybe log them or handle them however you see fit
+	}
+	return &user
+}
+
+func FindUserById(id uuid.UUID) *database.User {
+	var user database.User
+	result := database.GetConnection().Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		return nil // User not found
 		// Handle other potential errors, maybe log them or handle them however you see fit

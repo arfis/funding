@@ -83,9 +83,9 @@ func (s *InvestmentService) StartTicker(interval int32) {
 			for {
 				select {
 				case <-ticker.C:
-					fmt.Println("Ticker ticked at", time.Now())
+					fmt.Println("!Ticker ticked at", time.Now())
 					checkInvestmentStatus()
-					softDeleteNonTransactionalInvestments()
+					go softDeleteNonTransactionalInvestments()
 				}
 			}
 		}()
@@ -125,6 +125,16 @@ func checkInvestmentStatus() {
 	}
 }
 
+func (s *InvestmentService) GetInvestmentsByProjectID(projectId uuid.UUID) ([]dbModels.Investment, error) {
+	var investment []dbModels.Investment
+	if err := s.db.Find(&investment, "project_id = ?", projectId).Error; err != nil {
+		log.Printf("failed to find investment with id %s: %v", projectId, err)
+		return nil, err
+	}
+	log.Println("GOT INVESTMENT?!")
+	return investment, nil
+}
+
 func (s *InvestmentService) GetInvestmentByID(id uuid.UUID) (*dbModels.Investment, error) {
 	log.Printf("GETTING INVESTMENT BY ID %s", id)
 	var investment dbModels.Investment
@@ -146,11 +156,11 @@ func (s *InvestmentService) UpdateInvestment(investment *dbModels.Investment) (*
 
 func softDeleteNonTransactionalInvestments() {
 	db := database.GetConnection()
-	fmt.Printf("CHECKING")
+	fmt.Println("CHECKING")
 	now := time.Now()
 	var investments []dbModels.Investment
 
-	result := db.Where("locked_until < ? AND tx_hash is null AND deleted_at is null", now).Find(&investments)
+	result := db.Where("locked_until < ? AND status = 'pending' AND deleted_at is null", now).Find(&investments)
 	if result.Error != nil {
 		fmt.Println("Error fetching investments:", result.Error)
 		return

@@ -69,6 +69,7 @@ export type Investment = {
   status: Scalars['String']['output'];
   txHash: Scalars['String']['output'];
   userId: Scalars['ID']['output'];
+  userName?: Maybe<Scalars['String']['output']>;
 };
 
 export enum InvestmentType {
@@ -79,12 +80,12 @@ export enum InvestmentType {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createInvestment?: Maybe<Investment>;
+  createInvestment: Investment;
   createProject?: Maybe<Project>;
   createQuiz?: Maybe<Quiz>;
   deleteProject?: Maybe<Project>;
   submitQuizAnswer?: Maybe<SubmitQuizResponse>;
-  updateInvestmentStatus?: Maybe<Investment>;
+  updateInvestmentStatus: Investment;
   updateProject?: Maybe<Project>;
   updateQuiz?: Maybe<Quiz>;
 };
@@ -154,8 +155,8 @@ export type Project = {
   hasPermissionToInvest: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   imageUrl?: Maybe<Scalars['String']['output']>;
-  invested?: Maybe<Array<Maybe<Investment>>>;
-  investments?: Maybe<Array<Maybe<Investment>>>;
+  invested?: Maybe<Array<Investment>>;
+  investments?: Maybe<Array<Investment>>;
   leadingInvestor?: Maybe<Scalars['String']['output']>;
   longDescription?: Maybe<Scalars['String']['output']>;
   maxInvestment: Scalars['Int']['output'];
@@ -179,12 +180,18 @@ export type Query = {
   getAllProjects?: Maybe<Array<Maybe<Project>>>;
   getAllQuizes?: Maybe<Array<Maybe<Quiz>>>;
   getProject?: Maybe<Project>;
+  getProjectInvestments: Array<Investment>;
   getQuiz?: Maybe<Quiz>;
   getQuizByType?: Maybe<Quiz>;
 };
 
 
 export type QueryGetProjectArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetProjectInvestmentsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -283,12 +290,19 @@ export type GetProjectQueryVariables = Exact<{
 }>;
 
 
-export type GetProjectQuery = { __typename?: 'Query', getProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, ethAddress?: string | null, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, vesting?: string | null, totalRaisingAmount?: string | null, syndicateRaisingAmount?: string | null, leadingInvestor?: string | null, category?: string | null, valuation?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, invested?: Array<{ __typename?: 'Investment', createdAt: any, amount: number, precision: number, id: string, txHash: string, status: string } | null> | null, investments?: Array<{ __typename?: 'Investment', amount: number } | null> | null } | null };
+export type GetProjectQuery = { __typename?: 'Query', getProject?: { __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, description: string, allocation: number, ethAddress?: string | null, startDate: string, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, vesting?: string | null, totalRaisingAmount?: string | null, syndicateRaisingAmount?: string | null, leadingInvestor?: string | null, category?: string | null, valuation?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, invested?: Array<{ __typename?: 'Investment', createdAt: any, amount: number, precision: number, id: string, txHash: string, status: string }> | null, investments?: Array<{ __typename?: 'Investment', amount: number }> | null } | null };
+
+export type GetProjectInvestmentsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetProjectInvestmentsQuery = { __typename?: 'Query', getProjectInvestments: Array<{ __typename?: 'Investment', amount: number, userName?: string | null, status: string, createdAt: any, precision: number, id: string, txHash: string }> };
 
 export type GetAllProjectsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllProjectsQuery = { __typename?: 'Query', getAllProjects?: Array<{ __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, ethAddress?: string | null, description: string, allocation: number, startDate: string, category?: string | null, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, investments?: Array<{ __typename?: 'Investment', id: string, projectId: string, userId: string, amount: number } | null> | null } | null> | null };
+export type GetAllProjectsQuery = { __typename?: 'Query', getAllProjects?: Array<{ __typename?: 'Project', id: string, name: string, type: InvestmentType, imageUrl?: string | null, ethAddress?: string | null, description: string, allocation: number, startDate: string, category?: string | null, endDate?: string | null, ownerId: string, approved: boolean, maxInvestment: number, minInvestment: number, dealDate?: string | null, tokenPrice?: string | null, tge?: string | null, claim?: string | null, overview?: string | null, longDescription?: string | null, freeAllocation?: number | null, hasPermissionToEdit: boolean, hasPermissionToInvest: boolean, createdAt: string, investments?: Array<{ __typename?: 'Investment', id: string, projectId: string, userId: string, amount: number }> | null } | null> | null };
 
 export type CreateInvestmentMutationVariables = Exact<{
   projectId: Scalars['ID']['input'];
@@ -300,7 +314,7 @@ export type CreateInvestmentMutationVariables = Exact<{
 }>;
 
 
-export type CreateInvestmentMutation = { __typename?: 'Mutation', createInvestment?: { __typename?: 'Investment', id: string, amount: number } | null };
+export type CreateInvestmentMutation = { __typename?: 'Mutation', createInvestment: { __typename?: 'Investment', id: string, amount: number } };
 
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
@@ -323,7 +337,7 @@ export type UpdateInvestmentStatusMutationVariables = Exact<{
 }>;
 
 
-export type UpdateInvestmentStatusMutation = { __typename?: 'Mutation', updateInvestmentStatus?: { __typename?: 'Investment', id: string, amount: number } | null };
+export type UpdateInvestmentStatusMutation = { __typename?: 'Mutation', updateInvestmentStatus: { __typename?: 'Investment', id: string, amount: number } };
 
 export type UpdateProjectMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -459,6 +473,52 @@ export type GetProjectQueryHookResult = ReturnType<typeof useGetProjectQuery>;
 export type GetProjectLazyQueryHookResult = ReturnType<typeof useGetProjectLazyQuery>;
 export type GetProjectSuspenseQueryHookResult = ReturnType<typeof useGetProjectSuspenseQuery>;
 export type GetProjectQueryResult = Apollo.QueryResult<GetProjectQuery, GetProjectQueryVariables>;
+export const GetProjectInvestmentsDocument = gql`
+    query GetProjectInvestments($id: ID!) {
+  getProjectInvestments(id: $id) {
+    amount
+    userName
+    status
+    createdAt
+    precision
+    id
+    txHash
+  }
+}
+    `;
+
+/**
+ * __useGetProjectInvestmentsQuery__
+ *
+ * To run a query within a React component, call `useGetProjectInvestmentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetProjectInvestmentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetProjectInvestmentsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetProjectInvestmentsQuery(baseOptions: Apollo.QueryHookOptions<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables> & ({ variables: GetProjectInvestmentsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>(GetProjectInvestmentsDocument, options);
+      }
+export function useGetProjectInvestmentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>(GetProjectInvestmentsDocument, options);
+        }
+export function useGetProjectInvestmentsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>(GetProjectInvestmentsDocument, options);
+        }
+export type GetProjectInvestmentsQueryHookResult = ReturnType<typeof useGetProjectInvestmentsQuery>;
+export type GetProjectInvestmentsLazyQueryHookResult = ReturnType<typeof useGetProjectInvestmentsLazyQuery>;
+export type GetProjectInvestmentsSuspenseQueryHookResult = ReturnType<typeof useGetProjectInvestmentsSuspenseQuery>;
+export type GetProjectInvestmentsQueryResult = Apollo.QueryResult<GetProjectInvestmentsQuery, GetProjectInvestmentsQueryVariables>;
 export const GetAllProjectsDocument = gql`
     query GetAllProjects {
   getAllProjects {

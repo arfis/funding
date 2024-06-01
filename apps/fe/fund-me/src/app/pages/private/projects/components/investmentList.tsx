@@ -15,7 +15,7 @@ const InvestmentList: React.FC<{ investments: Investment[] }> = ({ investments }
         <Box>
             {investments.map((investment) => (
                 <StyledCard key={investment.id}>
-                    <CardContent>
+                    <Box>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <Typography variant="h6">
@@ -38,7 +38,7 @@ const InvestmentList: React.FC<{ investments: Investment[] }> = ({ investments }
                                 </Typography>
                             </Grid>
                         </Grid>
-                    </CardContent>
+                    </Box>
                 </StyledCard>
             ))}
         </Box>

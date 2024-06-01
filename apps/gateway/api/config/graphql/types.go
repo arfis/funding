@@ -10,7 +10,10 @@ import (
 	"log"
 )
 
-var allocationService service.Allocation
+var (
+	allocationService service.Allocation
+	userService       service.UserService
+)
 
 var updateProjectInputType = graphql.NewInputObject(graphql.InputObjectConfig{
 	Name: "UpdateProjectInput",
@@ -241,7 +244,7 @@ var projectType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var investmentType = graphql.NewObject(graphql.ObjectConfig{
+var investmentType = graphql.NewNonNull(graphql.NewObject(graphql.ObjectConfig{
 	Name: "Investment",
 	Fields: graphql.Fields{
 		"id": &graphql.Field{
@@ -271,8 +274,26 @@ var investmentType = graphql.NewObject(graphql.ObjectConfig{
 		"status": &graphql.Field{
 			Type: graphql.NewNonNull(graphql.String),
 		},
+		"userName": &graphql.Field{
+			Type: graphql.String,
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				// Detailed logging
+				log.Printf("Resolving userName for source: %+v, type: %T", params.Source, params.Source)
+
+				investment, ok := params.Source.(dbModels.Investment)
+				if !ok {
+					log.Printf("Invalid source for investment: %+v, type: %T", params.Source, params.Source)
+					return nil, fmt.Errorf("invalid source for investment")
+				}
+				user, err := userService.GetUserById(investment.UserID)
+				if err != nil {
+					return nil, err
+				}
+				return user.Email, nil
+			},
+		},
 	},
-})
+}))
 
 var userType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "User",

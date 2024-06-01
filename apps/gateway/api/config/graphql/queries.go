@@ -29,6 +29,22 @@ var GetRootQuery = graphql.NewObject(graphql.ObjectConfig{
 				}
 			},
 		},
+		"getProjectInvestments": &graphql.Field{
+			Type: graphql.NewNonNull(graphql.NewList(investmentType)),
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.ID),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				id := params.Args["id"].(string)
+				projectId, parseErr := uuid.Parse(id)
+				if parseErr != nil {
+					return nil, fmt.Errorf("invalid project ID")
+				}
+				return investmentService.GetInvestmentsByProjectID(projectId)
+			},
+		},
 		"getAllProjects": &graphql.Field{
 			Type: graphql.NewList(projectType), // Note: Use graphql.NewList for returning a list of items
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {

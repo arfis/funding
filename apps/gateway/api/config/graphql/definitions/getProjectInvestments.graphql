@@ -1,0 +1,12 @@
+query GetProjectInvestments($id: ID!) {
+    getProjectInvestments(id: $id) {
+        amount,
+        userName,
+        status,
+        createdAt,
+        precision,
+        id,
+        txHash
+        # Add other fields as necessary
+    }
+}

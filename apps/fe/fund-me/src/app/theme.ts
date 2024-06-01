@@ -14,7 +14,7 @@ export const theme = createTheme({
         },
         background: {
             default: '#f5f5f5', // Customize the background color
-        },
+        }
         // Add more customizations if needed
     },
     typography: {

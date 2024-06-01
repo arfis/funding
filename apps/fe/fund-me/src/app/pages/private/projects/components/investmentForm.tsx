@@ -65,31 +65,32 @@ const InvestmentForm: React.FC<{ project: Project }> = ({ project }) => {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
 
-            console.log('Attempting to send transaction...');
-            const tx = await signer.sendTransaction({
+            // Construct the transaction
+            const tx = {
                 to: project.ethAddress,
                 value: ethers.parseEther(amount.toString()),
-            });
+            };
 
-            console.log('Transaction sent, tx hash:', tx.hash);
+            // Send the transaction and get the transaction hash immediately
+            const txHash = await signer.sendUncheckedTransaction(tx);
 
             // Immediately update the status to 'pending' with the transaction hash
-            await updateInvestmentStatusFn(investmentId, 'pending', tx.hash);
+            await updateInvestmentStatusFn(investmentId, 'pending', txHash);
 
             // Wait for the transaction to be mined
-            console.log('Waiting for transaction to be mined...');
-            const receipt = await tx.wait();
+            await provider.once(txHash, async (receipt) => {
+                if (receipt.status === 1) {
+                    // Update investment status to 'approved' if the transaction is mined successfully
+                    await updateInvestmentStatusFn(investmentId, 'approved', txHash);
+                    alert('Transaction successful and registered on the backend');
+                } else {
+                    // Update investment status to 'failed' if the transaction failed
+                    await updateInvestmentStatusFn(investmentId, 'failed', txHash);
+                    alert('Transaction failed');
+                }
+            });
 
-            console.log('Transaction mined, receipt:', receipt);
-
-            // Update investment status to 'approved'
-            await updateInvestmentStatusFn(investmentId, 'approved', tx.hash);
-
-            alert('Transaction successful and registered on the backend');
         } catch (error) {
-            console.error('Transaction failed:', error);
-
-            // Update investment status to 'failed'
             if (investmentId) {
                 await updateInvestmentStatusFn(investmentId, 'failed', '');
             }

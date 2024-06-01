@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/arfis/crowd-funding/authorization/internal/authorization"
 	"github.com/arfis/crowd-funding/authorization/internal/tokenHandler"
+	"github.com/arfis/crowd-funding/authorization/pkg/user"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -23,6 +25,7 @@ func (ra *RestApiServer) StartWebServer(port uint, terminateChan chan int) error
 
 	r.HandleFunc("/validate", validateJwtToken).Methods("POST")
 	r.HandleFunc("/ping", pingHandler).Methods("GET")
+	r.HandleFunc("/user/{id}", ra.getUserByIDHandler).Methods("GET")
 	r.HandleFunc("/login", authorization.HandleGoogleLogin).Methods("GET")
 	r.HandleFunc("/login/callback", authorization.HandleGoogleCallback).Methods("GET")
 	r.HandleFunc("/login/metamask", authorization.HandleMetaMaskLogin).Methods("POST", "OPTIONS")
@@ -119,4 +122,32 @@ func validateJwtToken(w http.ResponseWriter, r *http.Request) {
 func pingHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("pong"))
+}
+
+func (ra *RestApiServer) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := uuid.Parse(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	foundUser := user.FindUserById(id)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	response := struct {
+		Email    string `json:"email"`
+		Username string `json:"username"`
+		IsActive bool   `json:"isActive"`
+	}{
+		Email:    foundUser.Email,
+		Username: foundUser.Username,
+		IsActive: foundUser.DeletedAt == nil,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
